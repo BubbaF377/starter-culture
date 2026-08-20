@@ -1,72 +1,121 @@
-<!-- devlore:user-manual source-hash:07e5c9192a4f0a385ad74ba525ef3484b01f0a0da8c0cd17bfeaa8bd7977abf5 -->
+<!-- devlore:user-manual source-hash:3b84c138c180f6207604925ae1092a1364e4ee8b83ae856b8c02687249fbd2d5 -->
 > **Do not move, rename, or edit this file.** Devlore generates and maintains this user manual automatically from `docs/PRODUCT.md`'s requirements — manual edits will be overwritten the next time Devlore detects the requirements have changed. To change what's documented, update `docs/PRODUCT.md` itself.
 <!-- devlore:user-manual requirement-hashes
 1=bb94fd11ce40
 2=fdba47cc6e6f
-3=47e7869cb62e
+3=8471884f470f
 4=e1b94681af3d
 5=5c11ec3c8084
 6=f29646e9d9b3
 7=f5bdd181dc64
-8=8d9cf94c08bc
+8=e62ee6891dee
+9=fdd54aa66c81
 -->
 
-StarterCulture is a small, AI-native software development studio's brand website, built as a single scrolling page that introduces the studio and its products to visitors. It's meant for anyone who lands on starterculturestudio.com — potential clients, collaborators, or curious developers — who wants to quickly understand what StarterCulture is, see what it's building, and know how to get in touch. This manual walks through what you'll find on the page and how to use each part of it.
+StarterCulture is the marketing website for StarterCulture, a small AI-native software development studio founded by Christian, live at starterculturestudio.com. It's a single scrolling page that introduces the studio, explains its AI-first approach to building software, and showcases its products — currently Devlore. This manual is for two kinds of people: visitors who want to learn about the studio and find its products, and whoever maintains the site (adding products, updating copy, publishing new versions) day to day.
 
 ## Table of Contents
 
 - [Navigating the Site](#navigating-the-site)
-- [Recognizing the StarterCulture Look and Brand](#recognizing-the-starterculture-look-and-brand)
-- [Reading the Hero Introduction](#reading-the-hero-introduction)
+- [Understanding the Brand and Visual Style](#understanding-the-brand-and-visual-style)
+- [Using the Logo Assets](#using-the-logo-assets)
+- [Referring to StarterCulture by Name](#referring-to-starterculture-by-name)
+- [Reading the Hero Tagline](#reading-the-hero-tagline)
 - [Browsing the Products Section](#browsing-the-products-section)
-- [Contacting the Studio](#contacting-the-studio)
+- [Getting in Touch](#getting-in-touch)
+- [Publishing a New Version of the Site](#publishing-a-new-version-of-the-site)
 
 ## Navigating the Site
 <!-- requirements: #1 -->
 
-StarterCulture is a single-page site — there's no multi-page navigation to click through. Everything lives on one continuous scroll, broken into clear sections: a header/nav bar, a hero introduction, a studio/about section, a products showcase, a contact area, and a footer.
+The whole site lives on one page — there's no multi-page navigation to click through. Scrolling from top to bottom, you'll move through the same sequence every time:
 
-To get around, use the header nav links (or your browser's find-in-page) to jump straight to a section, or simply scroll down the page in order. Because it's a single page, sharing a link to the site always brings a visitor to the same continuous experience — there's no separate "about page" or "products page" URL to look for.
+1. **Header/nav** — the StarterCulture wordmark and any in-page navigation links, pinned at the top.
+2. **Hero** — the studio's headline pitch and tagline.
+3. **Studio/about** — a short section describing what StarterCulture is and how it works.
+4. **Products** — a list of the studio's products, currently featuring Devlore.
+5. **Contact** — how to reach the studio.
+6. **Footer** — repeated branding and contact details, plus any closing links.
 
-[↑ Back to table of contents](#table-of-contents)
-
-## Recognizing the StarterCulture Look and Brand
-<!-- requirements: #2, #3, #4 -->
-
-StarterCulture has a deliberately light, clean, minimal visual style built around its logo palette: cream backgrounds (`#F5EFE1` and `#FBF8F1`), a terracotta accent (`#B5482B`), and dark brown text (`#2B2320`). As you scroll, you'll notice this same palette used consistently across the hero, section backgrounds, and buttons — it's what gives the site its calm, uncluttered feel.
-
-You'll also see the StarterCulture mark in a few places: the full wordmark logo appears in the header and footer, and the icon-only avatar mark appears alongside it in the hero. These are the same brand assets, just used at different sizes and in different spots for context — the small icon for compact branding, the full wordmark where there's more room.
-
-Wherever you see the studio's name written out on the page — in headings, body copy, page titles, or link labels — it's styled as **StarterCulture**, one word with no space and a capital S and C. (You may notice the logo graphic itself renders the name in a lowercase stylized script — that's just an artistic treatment of the wordmark, not a different spelling of the brand.)
+If the header includes anchor links, clicking one will smoothly scroll you down to the corresponding section rather than loading a new page — that's the extent of "navigation" on this site.
 
 [↑ Back to table of contents](#table-of-contents)
 
-## Reading the Hero Introduction
+## Understanding the Brand and Visual Style
+<!-- requirements: #2 -->
+
+The site is intentionally light, clean, and minimal, built around StarterCulture's existing logo palette:
+
+- **Cream** (`#F5EFE1` / `#FBF8F1`) — used for backgrounds and light surfaces.
+- **Terracotta** (`#B5482B`) — the primary accent color, used for emphasis (links, buttons, highlights).
+- **Dark brown** (`#2B2320`) — used for body text and strong contrast elements.
+
+As you scroll the page, you should notice this same small set of colors used consistently across every section — there's no separate color scheme per section. If you're evaluating whether a design change "fits" the site, checking it against these three colors and a minimal, uncluttered layout is the test.
+
+[↑ Back to table of contents](#table-of-contents)
+
+## Using the Logo Assets
+<!-- requirements: #3 -->
+
+StarterCulture has two logo marks:
+
+- **Wordmark** — `public/assets/starter-culture-logo.svg`, the full logo with text.
+- **Avatar/icon mark** — `public/assets/starter-culture-avatar.svg`, an icon-only version without text.
+
+Both files are available as standalone static assets (useful if you need the logo for something outside the page itself, like a social share image or a favicon). On the page itself, the marks aren't loaded from these files as `<img>` tags — they're inlined directly as SVG markup in the header, hero, and footer sections of `src/pages/index.astro`. If you ever need to update the logo's appearance, update the SVG in both places: the standalone asset file (for anyone linking to it directly) and the inlined copy in the page source (for what actually renders in the header, hero, and footer).
+
+[↑ Back to table of contents](#table-of-contents)
+
+## Referring to StarterCulture by Name
+<!-- requirements: #4 -->
+
+Everywhere the studio's name appears in page copy, titles, meta tags, and aria-labels, it's written as **StarterCulture** — one word, capital S, capital C, no space. This applies consistently across headings, body text, the page `<title>`, meta descriptions, and any `aria-label` attributes used for accessibility.
+
+The one exception is the logo graphic itself: the wordmark image uses a lowercase, stylized rendering of "starterculture" as part of its design. That's purely a visual treatment of the logo mark — it doesn't change how the name should be typed anywhere else on the page.
+
+[↑ Back to table of contents](#table-of-contents)
+
+## Reading the Hero Tagline
 <!-- requirements: #5 -->
 
-The hero is the first thing you see at the top of the page. It leads with the tagline **"Small studio. Big ideas. AI-native."** — a quick summary of what StarterCulture is about. Below the tagline is a supporting line explaining that the studio builds with AI as a first-class collaborator from the very first line of code, not as an afterthought bolted on later.
-
-There's nothing to click or configure here — the hero is meant to be read as your quick, at-a-glance introduction to the studio before you scroll further into the about and products sections for more detail.
+The hero section's main line is: **"Small studio. Big ideas. AI-native."** Below it sits a supporting line explaining that StarterCulture builds with AI as a first-class collaborator from the first line of code — not a bolted-on tool, but part of how the studio works from the start of every project. Together these two lines are the first thing a visitor reads and are meant to summarize the studio's positioning at a glance before they scroll further into the about and products sections.
 
 [↑ Back to table of contents](#table-of-contents)
 
 ## Browsing the Products Section
 <!-- requirements: #6 -->
 
-Scroll to the products section to see what StarterCulture is building. Each product is listed with a name, a short description, and a status pill showing how far along it is — currently either **"In development"** or **"Beta"** (the studio may introduce additional stages here over time as products progress).
+The products section lists each product StarterCulture has built, along with a status pill showing how far along it is — currently either **"In development"** or **"Beta"** (more stages may be added later as the studio needs them).
 
-Right now the section features **Devlore**, shown with a "Beta" pill. Its listing describes it as: "Devlore is an agentic knowledge base that automatically documents every push across your project repos, with human review only at release time." If you want to try it or see the actual package, click through the Devlore listing to its npm page at `https://www.npmjs.com/package/@starterculture/devlore` — this link takes you off the StarterCulture site directly to the published package.
+Right now the section features one product:
 
-As StarterCulture ships more products, expect this section to grow with additional listings following the same pattern: name, description, status pill, and any relevant outbound link.
+- **Devlore** — shown with a **Beta** pill. Its description reads: "Devlore is an agentic knowledge base that automatically documents every push across your project repos, with human review only at release time." Clicking through on Devlore takes you to its npm package page at `https://www.npmjs.com/package/@starterculture/devlore`, where you can view or install it.
+
+As the studio ships more products, expect this section to grow with additional entries, each carrying its own status pill and description.
 
 [↑ Back to table of contents](#table-of-contents)
 
-## Contacting the Studio
+## Getting in Touch
 <!-- requirements: #7 -->
 
-If you want to reach out to StarterCulture — for a project inquiry, a question about Devlore, or anything else — the contact section and footer both surface the studio's email address: `dev@starterculturestudio.com`. Click the address (or copy it manually) to open it in your default mail client, or simply note it down and email from wherever you normally send mail.
+To reach the studio, use the contact address listed in the contact section and repeated in the footer: **dev@starterculturestudio.com**. This is the single point of contact for questions, inquiries, or anything else related to StarterCulture or its products — there's no contact form on the page, just the email address itself.
 
-This is the single point of contact listed on the site, so use it for any correspondence with the studio.
+[↑ Back to table of contents](#table-of-contents)
+
+## Publishing a New Version of the Site
+<!-- requirements: #9 -->
+
+The live site at starterculturestudio.com does **not** update automatically when changes are merged to `main`. Instead, it tracks the latest published GitHub Release. To push a new version of the site live:
+
+1. Make and merge your changes to the repository (`BubbaF377/starter-culture`) as usual.
+2. Cut a new GitHub Release with a tag matching the `v*` pattern (for example, `v1.2.0`).
+3. Publishing that release triggers the deploy workflow, which checks out the release's tag, builds the site, and deploys it to GitHub Pages.
+
+A couple of things to keep in mind:
+
+- Simply pushing to `main` is not enough — the site won't reflect your changes until you publish a release.
+- The GitHub Pages environment's deployment branch policy needs to allow the tag pattern you're releasing under (currently `v*`) in addition to `main`, or the deploy will be blocked. If releases stop deploying, check this policy first.
+- The custom domain (`starterculturestudio.com`) is wired up via the `CNAME` file in `public/`, which gets carried into the build output automatically — you shouldn't need to touch it as part of a normal release.
 
 [↑ Back to table of contents](#table-of-contents)
 
