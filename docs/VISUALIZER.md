@@ -1,74 +1,76 @@
-<!-- devlore:visualizer source-hash:f654157eb352e140bae4625c6f11242bd358407807d7c6b85b0d7be05ef2dbad -->
+<!-- devlore:visualizer source-hash:07e5c9192a4f0a385ad74ba525ef3484b01f0a0da8c0cd17bfeaa8bd7977abf5 -->
 > **Do not move, rename, or edit this file.** Devlore generates and maintains this diagram automatically from `docs/PRODUCT.md`'s requirements — manual edits will be overwritten the next time Devlore detects the requirements have changed. To change what's diagrammed, update `docs/PRODUCT.md` itself.
 
-Note on grounding: the codebase snapshot confirms there is **no application source code yet** — no `index.html`, `assets/`, or manifest files currently exist in the repo, only `docs/PRODUCT.md`, `README.md`, and the `.github/workflows/devlore-*.yml` files. The diagram below of the site's internal structure is therefore drawn from the *planned* structure described in `docs/PRODUCT.md` (requirements 1–3), not from code that has been built — I've labeled it accordingly.
+No application source code exists yet in the codebase snapshot — only `docs/PRODUCT.md`, a placeholder `README.md`, and a set of `devlore-*.yml` GitHub Actions workflow files (contents unseen). The diagrams below are therefore best-effort reconstructions from the product doc's description of the intended site structure and deployment pipeline, plus the workflow filenames visible in the tree.
 
-Planned internal structure of the one-page site, as specified in `docs/PRODUCT.md` (not yet implemented in code):
+Shows the planned internal structure of the one-page site: the sections inside `index.html`, the logo assets it inlines/references, and the release-triggered workflow that assembles them into the published site.
 
 ```mermaid
-graph TD
-    subgraph "index.html (planned, not yet built)"
-        Header["Header / nav<br/>(inlined logo mark)"]
-        Hero["Hero section<br/>tagline + supporting line<br/>(inlined logo mark)"]
-        Studio["Studio / about section"]
-        Products["Products section<br/>(status pills)"]
-        Contact["Contact section"]
-        Footer["Footer<br/>(inlined logo mark + contact)"]
+flowchart TB
+    subgraph SiteRepo["starter-culture repo (root)"]
+        Index["index.html\n(single-page site)"]
+        Assets["assets/\nstarter-culture-logo.svg\nstarter-culture-avatar.svg"]
+        CNAME["CNAME\n(starterculturestudio.com)"]
+        ProductDoc["docs/PRODUCT.md\n(source-of-truth doc)"]
     end
 
-    Header --> Hero --> Studio --> Products --> Contact --> Footer
-
-    Wordmark["assets/starter-culture-logo.svg<br/>(wordmark)"]
-    Avatar["assets/starter-culture-avatar.svg<br/>(icon-only mark)"]
-
-    Wordmark -.->|inlined into| Header
-    Wordmark -.->|inlined into| Hero
-    Wordmark -.->|inlined into| Footer
-    Avatar -.->|available as icon mark| Header
-
-    Products -->|lists product: Devlore, "Beta" pill| DevloreEntry["Devlore product entry"]
-```
-
-External services the site depends on for hosting/delivery, per the deployment target in `docs/PRODUCT.md`:
-
-```mermaid
-graph LR
-    Repo["BubbaF377/starter-culture<br/>(main branch, root)"]
-    Pages["GitHub Pages"]
-    Domain["starterculturestudio.com<br/>(custom domain, DNS not yet configured)"]
-    Mail["dev@starterculturestudio.com<br/>(contact address)"]
-
-    Repo -->|deployed via| Pages
-    Pages -->|served at| Domain
-    Domain -.->|contact link only, no live integration| Mail
-```
-
-Devlore is described as both a product showcased *on* the site and a separate tool that operates *on this same repo* via CI workflows and a published npm package — this is an actual documented connection, not speculative, so it's shown here rather than omitted:
-
-```mermaid
-graph TD
-    ProductDoc["docs/PRODUCT.md<br/>(devlore:product-doc, fixed path)"]
-
-    subgraph "Devlore CI workflows in this repo"
-        WF1["devlore-capture-baseline-seed.yml"]
-        WF2["devlore-capture-baseline-draft.yml"]
-        WF3["devlore-analyze.yml"]
-        WF4["devlore-release.yml"]
-        WF5["devlore.yml"]
+    subgraph Sections["index.html sections"]
+        Header["Header / nav\n(inline wordmark)"]
+        Hero["Hero\n'Small studio. Big ideas. AI-native.'\n(inline avatar/logo mark)"]
+        About["Studio / about"]
+        Products["Products\n(Devlore card + status pill)"]
+        Contact["Contact\n(dev@starterculturestudio.com)"]
+        Footer["Footer\n(inline logo mark, contact)"]
     end
 
-    ProductDoc -->|source-of-truth context read by| WF1
-    ProductDoc --> WF2
-    ProductDoc --> WF3
-    ProductDoc --> WF4
-    ProductDoc --> WF5
+    Index --> Header
+    Index --> Hero
+    Index --> About
+    Index --> Products
+    Index --> Contact
+    Index --> Footer
 
-    SiteProducts["Products section on starterculturestudio.com"]
-    NPM["npmjs.com/package/@starterculture/devlore"]
+    Header -.uses.-> Assets
+    Hero -.uses.-> Assets
+    Footer -.uses.-> Assets
 
-    SiteProducts -->|links out to| NPM
-    SiteProducts -->|describes/showcases| DevloreProduct["Devlore<br/>(agentic knowledge-base product, status: Beta)"]
-    WF1 -.->|part of same system as| DevloreProduct
-    WF3 -.-> DevloreProduct
-    WF4 -.-> DevloreProduct
+    Deploy["pages-deploy.yml\n(on release: published)"]
+    Deploy -->|checks out release tag,\ndeploys| Index
+    Deploy -->|deploys| Assets
+    Deploy -->|deploys| CNAME
+```
+
+Shows the outside services and destinations the project touches: GitHub Pages/Releases for publishing the site, DNS for the custom domain, and the npm registry link surfaced in the Products section.
+
+```mermaid
+flowchart LR
+    Release["GitHub Release\n(tag published)"] --> Workflow["pages-deploy.yml"]
+    Workflow --> Pages["GitHub Pages\n(BubbaF377/starter-culture)"]
+    Pages --> Domain["starterculturestudio.com\n(custom domain via CNAME)"]
+    DNS["DNS provider\n(A records / CNAME —\nopen question, not yet configured)"] -.resolves.-> Domain
+
+    ProductsSection["Products section\n(Devlore entry)"] --> NPM["npmjs.com/package/@starterculture/devlore"]
+
+    Visitor["Site visitor / browser"] --> Domain
+    ContactSection["Contact section / footer"] --> Email["dev@starterculturestudio.com"]
+```
+
+Shows the real connection described in the docs: this single repository doubles as both the StarterCulture marketing site and the project repo that Devlore's automation targets, with a separate published npm package for Devlore itself.
+
+```mermaid
+flowchart TB
+    subgraph Repo["BubbaF377/starter-culture (single repo, dual role)"]
+        SiteFiles["Site files:\nindex.html, assets/, CNAME"]
+        ProductDoc["docs/PRODUCT.md\n(devlore:product-doc)"]
+        DevloreWorkflows["Devlore CI workflows:\ndevlore.yml\ndevlore-analyze.yml\ndevlore-capture-baseline-draft.yml\ndevlore-capture-baseline-seed.yml\ndevlore-release.yml"]
+        PagesWorkflow["pages-deploy.yml"]
+    end
+
+    DevloreWorkflows -->|reads/analyzes| ProductDoc
+    PagesWorkflow -->|publishes| SiteFiles
+
+    NPMPackage["@starterculture/devlore\n(published npm package,\nlinked from site's Products section)"]
+
+    SiteFiles -->|links to| NPMPackage
+    DevloreWorkflows -.produces/relates to.-> NPMPackage
 ```
