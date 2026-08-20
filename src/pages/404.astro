@@ -1,0 +1,77 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Page Not Found — StarterCulture" description="This page could not be found.">
+  <main class="not-found">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="72" height="72" role="img" aria-label="StarterCulture mark">
+      <defs>
+        <clipPath id="jarClip404"><rect x="38" y="34" width="64" height="78" rx="14"/></clipPath>
+      </defs>
+      <rect x="0" y="0" width="140" height="140" rx="24" fill="#FBF8F1" stroke="#EEE5D3" stroke-width="1"/>
+      <rect x="54" y="10" width="32" height="12" rx="3" fill="#B5482B"/>
+      <rect x="58" y="20" width="24" height="14" rx="4" fill="none" stroke="#B5482B" stroke-width="4"/>
+      <rect x="38" y="34" width="64" height="78" rx="14" fill="none" stroke="#B5482B" stroke-width="4"/>
+      <rect x="38" y="70" width="64" height="42" fill="#B5482B" clip-path="url(#jarClip404)"/>
+      <circle cx="58" cy="95" r="5" fill="#FBF8F1"/>
+      <circle cx="75" cy="100" r="4" fill="#FBF8F1"/>
+      <circle cx="68" cy="82" r="3" fill="#FBF8F1"/>
+      <circle cx="70" cy="55" r="4" fill="#FBF8F1"/>
+      <circle cx="63" cy="42" r="2.5" fill="#FBF8F1"/>
+    </svg>
+    <h1>404</h1>
+    <p>This page hasn't been cultivated yet.</p>
+    <a href="/">Back to StarterCulture</a>
+  </main>
+</Layout>
+
+<style>
+  :root {
+    --cream: #F5EFE1;
+    --terracotta: #B5482B;
+    --terracotta-dark: #93381F;
+    --brown: #2B2320;
+    --brown-soft: #6B5D52;
+  }
+
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--brown);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+
+  .not-found {
+    max-width: 480px;
+    margin: 6rem auto;
+    padding: 0 1.5rem;
+    text-align: center;
+  }
+
+  .not-found svg {
+    margin: 0 auto 1.5rem;
+  }
+
+  .not-found h1 {
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    font-size: 2.75rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .not-found p {
+    color: var(--brown-soft);
+    margin: 0;
+  }
+
+  .not-found a {
+    display: inline-block;
+    margin-top: 1.5rem;
+    color: var(--terracotta);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .not-found a:hover {
+    color: var(--terracotta-dark);
+  }
+</style>
