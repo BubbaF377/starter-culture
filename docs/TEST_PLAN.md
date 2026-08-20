@@ -8,7 +8,7 @@
 5=5c11ec3c8084
 6=f29646e9d9b3
 7=f5bdd181dc64
-8=3e26bb4e1b45
+8=8d9cf94c08bc
 -->
 
 ## Page Structure & Navigation
@@ -148,11 +148,11 @@
 
 ### TC-DEPLOY-01 — Site is reachable via GitHub Pages
 **Requirement(s):** #8
-**Preconditions:** Repo `BubbaF377/starter-culture` is published to GitHub Pages from root of `main`.
+**Preconditions:** Repo `BubbaF377/starter-culture` has at least one published GitHub Release, and `.github/workflows/pages-deploy.yml` has run successfully for that release (triggered by `release: published`), deploying `index.html`, `assets/`, and `CNAME` from that release's tag to GitHub Pages.
 **Steps:**
-1. Navigate to the GitHub Pages URL for the repo (e.g. `bubbaf377.github.io/starter-culture`).
-2. Confirm the page loads.
-**Expected Result:** The StarterCulture site loads correctly at the GitHub Pages URL, matching the site seen in other test cases.
+1. Navigate to the custom domain `starterculturestudio.com`.
+2. Confirm the page loads and matches the content of the latest published GitHub Release (not necessarily raw `main` HEAD).
+**Expected Result:** The StarterCulture site loads correctly at `starterculturestudio.com`, reflecting the latest published GitHub Release, matching the site seen in other test cases.
 
 ## Out of scope
 
