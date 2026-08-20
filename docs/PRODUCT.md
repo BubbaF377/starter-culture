@@ -18,7 +18,7 @@ A simple, single-page brand site that introduces StarterCulture as a small softw
 5. Hero tagline: "Small studio. Big ideas. AI-native." with supporting line describing the studio as building with AI as a first-class collaborator from the first line of code.
 6. Products section lists each product with a status pill reflecting its actual progress — "In development" or "Beta" (more stages may be added later as needed). Devlore currently uses a "Beta" pill, with this description: "Devlore is an agentic knowledge base that automatically documents every push across your project repos, with human review only at release time." Devlore also links out to its npm package: `https://www.npmjs.com/package/@starterculture/devlore`.
 7. Contact section/footer uses `dev@starterculturestudio.com` as the studio contact address.
-8. Deployment target: GitHub Pages from this repo (`BubbaF377/starter-culture`), root of `main` branch, with `starterculturestudio.com` as the custom domain.
+8. Deployment target: GitHub Pages from this repo (`BubbaF377/starter-culture`), with `starterculturestudio.com` as the custom domain (via the `CNAME` file at repo root). The live site tracks the latest published GitHub Release, not raw `main` HEAD — `.github/workflows/pages-deploy.yml` deploys `index.html`, `assets/`, and `CNAME` on each `release: published` event (checking out that release's tag), so publishing a new version of the site means cutting a new release/tag.
 
 ## Open questions
 
