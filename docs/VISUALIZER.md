@@ -1,75 +1,104 @@
-<!-- devlore:visualizer source-hash:9fe948fbdf8a97973e0586a48295b3bd7420a00f35cfb684b0afa49045e04868 -->
+<!-- devlore:visualizer source-hash:93dc1f67fb5327d146601f6762be70fc148b59a6b0eb9650d4275e86529a3475 -->
 > **Do not move, rename, or edit this file.** Devlore generates and maintains this diagram automatically from `docs/PRODUCT.md`'s requirements — manual edits will be overwritten the next time Devlore detects the requirements have changed. To change what's diagrammed, update `docs/PRODUCT.md` itself.
 
-**Internal structure** — this shows how the Astro site's own pages, shared components, styles, and static assets fit together, based on the file/page layout described in the product doc and baseline snapshot.
+Since no live source files were provided beyond the file tree and prose descriptions, these diagrams are built from the product doc's explicit structural claims (components, tables, workflows) rather than from inspected code.
+
+**Internal structure** — how the Astro pages, shared components/layout, and styling pieces fit together on the site itself.
 
 ```mermaid
 graph TD
-    Config[astro.config.mjs] --> Layout[src/layouts/Layout.astro]
+    Layout["src/layouts/Layout.astro<br/>(wraps all pages; outside-click script<br/>for closing login dropdown)"]
 
-    Layout --> Header[src/components/Header.astro]
-    Layout --> Footer[src/components/Footer.astro]
-    Layout --> SiteCSS[src/styles/site.css]
-    Layout --> DropdownScript[shared outside-click script<br/>closes login dropdown]
+    subgraph Pages["src/pages/*.astro"]
+        Index["index.astro<br/>(home: header/hero/studio/products/contact/footer)"]
+        ClientLogin["client-login.astro<br/>(UI only, not wired to auth)"]
+        CompanyLogin["company-login.astro<br/>(UI only, not wired to auth)"]
+        About["_about.astro<br/>(underscore-prefixed = unrouted wireframe)"]
+        NotFound["404.astro"]
+        AboutPageFuture["about.astro (planned)<br/>renders Builders/Advisors from personnel table"]
+    end
 
-    Header --> LoginDropdown[Login dropdown: details/summary<br/>Client Login / Company Login]
-    Footer --> LoginDropdown
-    Header -. inlined wordmark SVG/text .-> LogoAssets
-    Footer -. inlined wordmark SVG/text .-> LogoAssets
+    Header["src/components/Header.astro<br/>(nav + inlined wordmark SVG + login dropdown)"]
+    Footer["src/components/Footer.astro<br/>(footer nav + inlined wordmark + login dropdown, opens upward)"]
+    SiteCSS["src/styles/site.css<br/>(tokens, typography, header/footer,<br/>login-dropdown, auth-card styles)"]
+    Assets["public/assets/<br/>starter-culture-logo.svg<br/>starter-culture-avatar.svg"]
 
-    Layout --> Index[src/pages/index.astro<br/>header/hero/studio/products/contact/footer]
-    Layout --> ClientLogin[src/pages/client-login.astro<br/>UI only, not wired to auth]
-    Layout --> CompanyLogin[src/pages/company-login.astro<br/>UI only, not wired to auth]
-    Layout --> NotFound[src/pages/404.astro]
-    Layout -. excluded from routing .-> AboutDraft[src/pages/_about.astro<br/>wireframe, unpublished]
+    Layout --> Index
+    Layout --> ClientLogin
+    Layout --> CompanyLogin
+    Layout --> NotFound
+    Layout -.excluded from build.-> About
+    About -.rename, drop underscore.-> AboutPageFuture
 
-    ClientLogin --> ClientIDForm[Client ID form]
-    ClientIDForm --> PasscodeStep[passcode-entry step<br/>client-side only]
+    Index --> Header
+    Index --> Footer
+    ClientLogin --> Header
+    ClientLogin --> Footer
+    CompanyLogin --> Header
+    CompanyLogin --> Footer
 
-    CompanyLogin --> EmailForm[email form]
-    EmailForm --> CheckEmailStep[check-your-email step<br/>client-side only]
-
-    Index --> ProductsSection[Products section]
-    ProductsSection --> DevloreLink[Devlore listing<br/>Beta pill + npm link]
-
-    PublicDir[public/] --> LogoAssets[starter-culture-logo.svg<br/>starter-culture-avatar.svg]
-    PublicDir --> CNAME[CNAME]
-    PublicDir --> Robots[robots.txt]
-    Layout --> PublicDir
+    Header --> SiteCSS
+    Footer --> SiteCSS
+    Index --> SiteCSS
+    Header -. references .-> Assets
+    Footer -. references .-> Assets
 ```
 
-**External dependencies** — this shows the outside services the site relies on or is planned to rely on: GitHub Pages/Actions for hosting and deploys, Porkbun for DNS, the npm registry for the Devlore product link, and the not-yet-created Supabase project for auth/data once login and the admin area are built.
+**External dependencies** — the outside services the site (and its planned auth/admin flows) call or deploy through.
 
 ```mermaid
 graph LR
-    Repo[starter-culture repo] -->|release: published triggers| Workflow[.github/workflows/pages-deploy.yml<br/>withastro/action@v3]
-    Workflow --> GHPages[GitHub Pages hosting]
-    GHPages -->|custom domain via CNAME| Domain[starterculturestudio.com]
-    Porkbun[Porkbun DNS<br/>apex A records + www CNAME] --> Domain
-    GHPages -->|HTTPS cert issued| Domain
+    Site["StarterCulture Astro site<br/>(static output)"]
 
-    IndexPage[index.astro Products section] -->|external link| NPM[npm registry<br/>@starterculture/devlore package]
+    subgraph Supabase["Supabase project: starter-culture<br/>(wklchodmfgmtsateuryy.supabase.co, Canada Central)"]
+        Auth["Supabase Auth<br/>(magic link — Company Login only;<br/>staff = rows in auth.users)"]
+        DBClients["Postgres: clients table<br/>(exposed via Data API, RLS: staff only)"]
+        DBOtp["Postgres: client_otp_codes table<br/>(RLS: no policies; not exposed via Data API;<br/>reached only by future direct Postgres connection)"]
+        DBPersonnel["Postgres: personnel table<br/>(exposed via Data API,<br/>public select, staff write)"]
+        EdgeFn["Edge Function (not yet built)<br/>Client ID→email lookup,<br/>OTP issue/verify, session token"]
+    end
 
-    ClientLoginPage[client-login.astro] -.planned.-> Supabase[(Supabase project<br/>dedicated instance, not yet created)]
-    CompanyLoginPage[company-login.astro] -.planned.-> Supabase
-    Supabase -.planned.-> SupabaseAuth[Supabase Auth<br/>email OTP for clients,<br/>magic link for company]
-    Supabase -.planned.-> SupabaseDB[(Supabase tables<br/>clients, personnel)]
-    ClientLoginPage -.planned, ID lookup.-> EdgeFn[Supabase Edge Function<br/>candidate for Client ID → email lookup]
-    EdgeFn -.planned.-> SupabaseDB
+    GH["GitHub repo: BubbaF377/starter-culture"]
+    Actions["GitHub Actions<br/>pages-deploy.yml (withastro/action@v3)<br/>triggered on release: published"]
+    Pages["GitHub Pages hosting"]
+    Porkbun["Porkbun DNS<br/>(4 apex A records + www CNAME)"]
+    NPM["npm registry<br/>@starterculture/devlore package"]
+
+    Site -->|Company Login: request magic link| Auth
+    Site -->|client-facing pages, future admin forms| DBClients
+    Site -->|About page team section| DBPersonnel
+    EdgeFn -->|verify/issue OTP| DBOtp
+    Site -.planned Client Login flow.-> EdgeFn
+
+    GH --> Actions
+    Actions -->|builds & deploys tagged release| Pages
+    Porkbun -->|A records / CNAME| Pages
+    Pages -->|serves| Site
+
+    Site -->|Devlore product link in Products section| NPM
 ```
 
-**Linked repos/projects** — the docs describe this single repo as doing double duty: it hosts the marketing site *and* Devlore-specific docs/automation, and separately the site links out to Devlore's published npm package. No other external repo connection is described, so no separate repo-to-repo diagram beyond this is included.
+**Repo's dual purpose (Devlore connection)** — this repo isn't only the marketing site; per the baseline snapshot it also hosts Devlore's own project docs and automation, and the site links out to Devlore's published package.
 
 ```mermaid
 graph TD
-    Repo[BubbaF377/starter-culture<br/>single repo] --> SiteCode[Site code<br/>src/, public/, astro.config.mjs]
-    Repo --> DevloreDocs[docs/<br/>PRODUCT.md, ONBOARDING.md,<br/>TEST_PLAN.md, USER_MANUAL.md, VISUALIZER.md]
-    Repo --> DevloreWorkflows[.github/workflows/devlore-*.yml<br/>analyze, capture-baseline-draft,<br/>capture-baseline-seed, release]
+    Repo["starter-culture repo (BubbaF377/starter-culture)"]
 
-    SiteCode --> ProductsSection[Products section links out]
-    ProductsSection -->|npm package link| DevloreNPM[npm: @starterculture/devlore<br/>Beta]
+    subgraph SiteConcern["Marketing site concern"]
+        SitePages["src/pages, src/components, src/styles"]
+        SiteWorkflow["pages-deploy.yml"]
+        ProductDoc["docs/PRODUCT.md<br/>(devlore:product-doc — read by Devlore tooling)"]
+    end
 
-    DevloreWorkflows -. automation for .-> DevloreProduct[Devlore product itself]
-    DevloreDocs -. documents .-> DevloreProduct
-    DevloreProduct -. published as .-> DevloreNPM
+    subgraph DevloreConcern["Devlore project concern (same repo)"]
+        DevloreDocs["docs/ONBOARDING.md, TEST_PLAN.md,<br/>USER_MANUAL.md, VISUALIZER.md"]
+        DevloreWorkflows["devlore-analyze.yml<br/>devlore-capture-baseline-draft.yml<br/>devlore-capture-baseline-seed.yml<br/>devlore-release.yml<br/>devlore.yml"]
+    end
+
+    Repo --> SiteConcern
+    Repo --> DevloreConcern
+
+    ProductPage["Homepage Products section"] -->|links to| NPMPkg["npm: @starterculture/devlore"]
+    SitePages --> ProductPage
+    DevloreWorkflows -.produces/relates to.-> NPMPkg
 ```
