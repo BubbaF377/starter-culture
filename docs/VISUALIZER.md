@@ -1,20 +1,22 @@
-<!-- devlore:visualizer source-hash:f048fb8589402c3161543c4735788488f328ed83eb0752606959c8b43062b58c -->
+<!-- devlore:visualizer source-hash:ab7a06df95c9654d1e275570d9935b9744218b8e2537abbe2367276e546c9917 -->
 > **Do not move, rename, or edit this file.** Devlore generates and maintains this diagram automatically from `docs/PRODUCT.md`'s requirements — manual edits will be overwritten the next time Devlore detects the requirements have changed. To change what's diagrammed, update `docs/PRODUCT.md` itself.
 
-Since the codebase snapshot is present (structure inferred from file tree, filenames, and PRODUCT.md), the diagrams below are grounded in that plus the product doc.
+Since the baseline snapshot describes file names and the product doc describes required structure, but neither shows actual code contents beyond what's summarized, these diagrams are grounded in that inferred/declared structure only.
 
-**1. Internal structure** — how the Astro site's own pages, layout, shared components, and static assets fit together.
+**1. Internal structure** — how pages, shared layout/components, and styles fit together per the site's Astro conventions.
 
 ```mermaid
 graph TD
     Layout["src/layouts/Layout.astro"]
-    Index["src/pages/index.astro (homepage: header/nav, hero, studio, products, contact, footer)"]
-    About["src/pages/about.astro (company narrative + team cards)"]
-    Clients["src/pages/clients.astro (login-gated wireframe)"]
-    NotFound["src/pages/404.astro"]
-    Header["src/components/Header.astro (props: links)"]
+    Header["src/components/Header.astro<br/>(takes 'links' prop)"]
     Footer["src/components/Footer.astro"]
-    SiteCSS["src/styles/site.css (tokens, typography, header/footer CSS)"]
+    SiteCSS["src/styles/site.css<br/>(shared tokens/typography/header/footer)"]
+
+    Index["src/pages/index.astro<br/>(hero, studio/about, products, contact — scoped styles)"]
+    About["src/pages/_about.astro<br/>(wireframe, unlinked/unrouted)"]
+    Clients["src/pages/_clients.astro<br/>(wireframe login, unlinked/unrouted)"]
+    Err["src/pages/404.astro"]
+
     LogoWordmark["public/assets/starter-culture-logo.svg"]
     LogoAvatar["public/assets/starter-culture-avatar.svg"]
     CNAME["public/CNAME"]
@@ -23,77 +25,63 @@ graph TD
     Index --> Layout
     About --> Layout
     Clients --> Layout
-    NotFound --> Layout
+    Err --> Layout
 
-    Index --> Header
-    Index --> Footer
-    About --> Header
-    About --> Footer
-    Clients --> Header
-    Clients --> Footer
+    Layout --> Header
+    Layout --> Footer
+    Layout --> SiteCSS
 
     Header --> SiteCSS
     Footer --> SiteCSS
-    Index --> SiteCSS
-    About --> SiteCSS
-    Clients --> SiteCSS
 
-    Header -. inlined wordmark text .-> LogoWordmark
-    Footer -. inlined wordmark text .-> LogoWordmark
-    Index -.-> LogoAvatar
+    Header -. "inlined wordmark <text>, sans-serif" .-> LogoWordmark
+    Footer -. "inlined wordmark <text>, sans-serif" .-> LogoWordmark
+    Index -. "references" .-> LogoAvatar
 
-    Footer --> About
-    Footer --> Clients
+    Index --> Products["Products section:<br/>Devlore card (Beta pill)"]
+    Products -- "external link" --> NpmLink["npmjs.com/package/@starterculture/devlore"]
+
+    Footer -. "future link once ready" .-> About
+    Footer -. "future link once ready" .-> Clients
 ```
 
-**2. External dependencies** — the outside services/APIs the built and deployed site actually relies on.
+**2. External dependencies** — the outside services the built/deployed site relies on (hosting, DNS, CI action, and the linked npm package).
 
 ```mermaid
 graph LR
-    Repo["starter-culture repo (BubbaF377/starter-culture)"]
-    Action["withastro/action@v3 (GitHub Actions build)"]
-    Workflow[".github/workflows/pages-deploy.yml (triggers on release: published)"]
-    Pages["GitHub Pages hosting"]
-    DNS["Porkbun DNS\n(4 apex A records + www CNAME)"]
-    Domain["starterculturestudio.com"]
-    Cert["GitHub-issued HTTPS certificate"]
-    NPM["npmjs.com/package/@starterculture/devlore"]
-    User["Site visitor / browser"]
+    Repo["BubbaF377/starter-culture (GitHub repo)"]
+    Workflow[".github/workflows/pages-deploy.yml"]
+    Action["withastro/action@v3"]
+    Pages["GitHub Pages<br/>(env deploy branch policy allows v* tags + main)"]
+    Domain["starterculturestudio.com<br/>(custom domain via CNAME)"]
+    Porkbun["Porkbun DNS<br/>(4 apex A records → GH Pages IPs,<br/>www CNAME → bubbaf377.github.io)"]
+    Cert["GitHub-issued HTTPS cert<br/>(apex + www)"]
+    Npm["npm registry:<br/>@starterculture/devlore package page"]
 
-    Repo --> Workflow --> Action --> Pages
-    Pages --> Cert
-    DNS --> Domain
-    Domain --> Pages
-    User --> Domain
-    Index2["Products section (index.astro)"] -. links out to .-> NPM
+    Repo -- "release: published (tag vX.Y.Z)" --> Workflow
+    Workflow --> Action
+    Action --> Pages
+    Pages --> Domain
+    Porkbun --> Domain
+    Domain --> Cert
+    Repo -- "Products section links out to" --> Npm
 ```
 
-**3. Linked repos/projects** — the product doc explicitly describes this same repo also being used by Devlore's own automation (dogfooding), and names a sibling studio site sharing the same stack, so both are included as real, documented connections.
+**3. Other linked repos/projects** — the product doc explicitly describes this repo doing double duty as Devlore's own dogfooding target and linking to Devlore's published package; it also names a sibling studio site sharing the same template, which is noted here as a documented reference point rather than a runtime dependency.
 
 ```mermaid
 graph TD
-    Repo["starter-culture repo"]
-    Docs["docs/ (PRODUCT.md, ONBOARDING.md, TEST_PLAN.md, USER_MANUAL.md, VISUALIZER.md)"]
-    WF1["devlore.yml"]
-    WF2["devlore-analyze.yml"]
-    WF3["devlore-capture-baseline-draft.yml"]
-    WF4["devlore-capture-baseline-seed.yml"]
-    WF5["devlore-release.yml"]
-    DevloreProduct["Devlore (agentic knowledge-base product, showcased on the site)"]
-    HFG["heartland-fermenters-guild (sibling studio site repo)"]
+    ThisRepo["starter-culture repo<br/>(StarterCulture site source)"]
+    DevloreWorkflows["devlore-*.yml workflows<br/>(analyze, capture-baseline-draft/seed, release, devlore.yml)"]
+    DevloreProduct["Devlore<br/>(agentic knowledge base product, showcased on site)"]
+    DevloreDocs["docs/PRODUCT.md, ONBOARDING.md,<br/>TEST_PLAN.md, USER_MANUAL.md, VISUALIZER.md"]
+    NpmPkg["npm: @starterculture/devlore"]
+    Sibling["heartland-fermenters-guild<br/>(sibling studio site, same stack/shape — referenced, not integrated)"]
 
-    Repo --> WF1
-    Repo --> WF2
-    Repo --> WF3
-    Repo --> WF4
-    Repo --> WF5
-    WF1 --> DevloreProduct
-    WF2 --> DevloreProduct
-    WF3 --> DevloreProduct
-    WF4 --> DevloreProduct
-    WF5 --> DevloreProduct
-    DevloreProduct -. reads/writes .-> Docs
-    Docs -. source of truth for .-> Repo
-
-    Repo -. "same stack/repo shape (no direct integration)" .-> HFG
+    ThisRepo -- "runs Devlore automation on itself (dogfooding)" --> DevloreWorkflows
+    DevloreWorkflows -- "documents pushes into" --> DevloreDocs
+    DevloreWorkflows -. "implements/exercises" .-> DevloreProduct
+    ThisRepo -- "Products section links to" --> NpmPkg
+    NpmPkg -. "published artifact of" .-> DevloreProduct
+    ThisRepo -. "shares Astro/GH Pages template pattern with (no direct link)" .-> Sibling
 ```
