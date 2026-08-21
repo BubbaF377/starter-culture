@@ -8,10 +8,11 @@
 5=9d6ef33981d4
 6=f29646e9d9b3
 7=f5bdd181dc64
-8=dcf3b7bd9f26
-9=32aa2c19d88b
-10=80ce0f0ef2ce
-11=877e90e0e17b
+8=4d6e6fc97e0b
+9=a6047b28b63c
+10=05d204fae865
+11=f5a4398069d8
+12=73c935047264
 -->
 
 ## Homepage Structure
@@ -136,36 +137,36 @@
 1. Click each header nav item in turn (e.g. Studio, Products, Contact).
 **Expected Result:** Each click scrolls the page to the corresponding section anchor smoothly, without a full page reload.
 
-### TC-NAV-02 — Footer does not link to About or Client Portal
+### TC-NAV-02 — Footer does not link to About page; Login dropdown links to Client Login and Company Login
 **Requirement(s):** #9, #10
 **Steps:**
-1. Inspect all links present in the footer.
-**Expected Result:** No link to `/about` or `/clients` appears in the footer (pages are not yet published).
+1. Inspect all links present in the footer, including the Login dropdown menu.
+**Expected Result:** No link to `/about` appears in the footer (page not yet published — leading-underscore `_about.astro` is excluded from routing). The footer's Login dropdown contains "Client Login" and "Company Login" options linking to `/client-login` and `/company-login` respectively — both pages are live and routable, though each still carries a "🚧 Not yet connected — UI preview only" badge since real auth isn't wired up yet.
 
-### TC-NAV-03 — Direct navigation to /about and /clients returns not-found
+### TC-NAV-03 — Direct navigation to /about returns not-found; /client-login and /company-login are reachable
 **Requirement(s):** #9, #10
 **Steps:**
 1. Manually enter `starterculturestudio.com/about` in the browser address bar.
-2. Manually enter `starterculturestudio.com/clients` in the browser address bar.
-**Expected Result:** Both requests return a 404/not-found page — neither route is built or reachable.
+2. Manually enter `starterculturestudio.com/client-login` and `starterculturestudio.com/company-login` in the browser address bar.
+**Expected Result:** The `/about` request returns a 404/not-found page — the route is not built (excluded via leading underscore, no real names finalized). The `/client-login` and `/company-login` requests successfully load their respective UI-preview pages (each displaying a "🚧 Not yet connected — UI preview only" badge), not a 404.
 
 ## Deployment & Domain
 
 ### TC-DEPLOY-01 — Custom apex domain loads site over valid HTTPS
-**Requirement(s):** #11
+**Requirement(s):** #12
 **Preconditions:** DNS propagated, certificate issued.
 **Steps:**
 1. Navigate to `https://starterculturestudio.com`.
 **Expected Result:** Site loads with a valid TLS certificate and no browser security warnings.
 
 ### TC-DEPLOY-02 — www subdomain resolves and loads site
-**Requirement(s):** #11
+**Requirement(s):** #12
 **Steps:**
 1. Navigate to `https://www.starterculturestudio.com`.
 **Expected Result:** Site loads correctly (resolved via CNAME to `bubbaf377.github.io`) with a valid certificate and no warnings.
 
 ### TC-DEPLOY-03 — Live site reflects latest published release, not unreleased main
-**Requirement(s):** #11
+**Requirement(s):** #12
 **Preconditions:** A commit exists on `main` that is newer than the latest published GitHub Release tag.
 **Steps:**
 1. Compare visible content/version on the live site against the latest GitHub Release tag's content.
