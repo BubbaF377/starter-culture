@@ -1,76 +1,72 @@
-<!-- devlore:visualizer source-hash:07e5c9192a4f0a385ad74ba525ef3484b01f0a0da8c0cd17bfeaa8bd7977abf5 -->
+<!-- devlore:visualizer source-hash:3b84c138c180f6207604925ae1092a1364e4ee8b83ae856b8c02687249fbd2d5 -->
 > **Do not move, rename, or edit this file.** Devlore generates and maintains this diagram automatically from `docs/PRODUCT.md`'s requirements — manual edits will be overwritten the next time Devlore detects the requirements have changed. To change what's diagrammed, update `docs/PRODUCT.md` itself.
 
-No application source code exists yet in the codebase snapshot — only `docs/PRODUCT.md`, a placeholder `README.md`, and a set of `devlore-*.yml` GitHub Actions workflow files (contents unseen). The diagrams below are therefore best-effort reconstructions from the product doc's description of the intended site structure and deployment pipeline, plus the workflow filenames visible in the tree.
-
-Shows the planned internal structure of the one-page site: the sections inside `index.html`, the logo assets it inlines/references, and the release-triggered workflow that assembles them into the published site.
+A note first: the baseline snapshot describes the repo's **current** actual state as a plain static site (`index.html`, `assets/`, root `CNAME`), while `docs/PRODUCT.md` describes a **target** Astro-based rebuild (`astro.config.mjs`, `src/layouts`, `src/pages`, `public/`) that hasn't landed yet per the file tree. The diagrams below show both, clearly separated, rather than blending them into one false "as-built" picture.
 
 ```mermaid
 flowchart TB
-    subgraph SiteRepo["starter-culture repo (root)"]
-        Index["index.html\n(single-page site)"]
-        Assets["assets/\nstarter-culture-logo.svg\nstarter-culture-avatar.svg"]
-        CNAME["CNAME\n(starterculturestudio.com)"]
-        ProductDoc["docs/PRODUCT.md\n(source-of-truth doc)"]
+    subgraph Current["Current repo state (per file tree)"]
+        idx["index.html<br/>(single static page:<br/>header/nav, hero, about,<br/>products, contact, footer)"]
+        assets["assets/<br/>starter-culture-logo.svg<br/>starter-culture-avatar.svg"]
+        cname["CNAME<br/>(starterculturestudio.com)"]
+        docs["docs/<br/>PRODUCT.md, TEST_PLAN.md,<br/>USER_MANUAL.md, VISUALIZER.md"]
+        wf["/.github/workflows/<br/>pages-deploy.yml<br/>devlore-*.yml"]
+
+        idx -->|inlines SVG marks from| assets
+        wf -->|deploys| idx
+        wf -->|copies| cname
+        wf -->|reads/processes| docs
     end
 
-    subgraph Sections["index.html sections"]
-        Header["Header / nav\n(inline wordmark)"]
-        Hero["Hero\n'Small studio. Big ideas. AI-native.'\n(inline avatar/logo mark)"]
-        About["Studio / about"]
-        Products["Products\n(Devlore card + status pill)"]
-        Contact["Contact\n(dev@starterculturestudio.com)"]
-        Footer["Footer\n(inline logo mark, contact)"]
+    subgraph Target["Target architecture (per PRODUCT.md, not yet built)"]
+        cfg["astro.config.mjs"]
+        layout["src/layouts/Layout.astro"]
+        indexPage["src/pages/index.astro<br/>(inlined logo marks in<br/>header/hero/footer)"]
+        notFound["src/pages/404.astro"]
+        pub["public/<br/>assets/starter-culture-logo.svg<br/>assets/starter-culture-avatar.svg<br/>CNAME, robots.txt"]
+
+        cfg --> layout --> indexPage
+        indexPage --> notFound
+        indexPage -->|references| pub
     end
 
-    Index --> Header
-    Index --> Hero
-    Index --> About
-    Index --> Products
-    Index --> Contact
-    Index --> Footer
-
-    Header -.uses.-> Assets
-    Hero -.uses.-> Assets
-    Footer -.uses.-> Assets
-
-    Deploy["pages-deploy.yml\n(on release: published)"]
-    Deploy -->|checks out release tag,\ndeploys| Index
-    Deploy -->|deploys| Assets
-    Deploy -->|deploys| CNAME
+    docs -.->|specifies requirements for| Target
 ```
 
-Shows the outside services and destinations the project touches: GitHub Pages/Releases for publishing the site, DNS for the custom domain, and the npm registry link surfaced in the Products section.
+This second diagram shows the outside services the project actually touches: GitHub Pages hosting/build tooling, DNS for the custom domain, the npm registry (where Devlore is linked from the Products section), and the studio's contact email — all explicitly named in the docs.
 
 ```mermaid
 flowchart LR
-    Release["GitHub Release\n(tag published)"] --> Workflow["pages-deploy.yml"]
-    Workflow --> Pages["GitHub Pages\n(BubbaF377/starter-culture)"]
-    Pages --> Domain["starterculturestudio.com\n(custom domain via CNAME)"]
-    DNS["DNS provider\n(A records / CNAME —\nopen question, not yet configured)"] -.resolves.-> Domain
+    site["starter-culture site<br/>(index.html today /<br/>Astro build target)"]
 
-    ProductsSection["Products section\n(Devlore entry)"] --> NPM["npmjs.com/package/@starterculture/devlore"]
+    ghpages["GitHub Pages<br/>(hosting)"]
+    ghaction["withastro/action@v3<br/>(build action, per<br/>pages-deploy.yml, target state)"]
+    ghrelease["GitHub Releases<br/>(release: published event<br/>triggers deploy)"]
+    dns["DNS provider<br/>(A records / CNAME for<br/>starterculturestudio.com —<br/>open/unresolved per docs)"]
+    npm["npm registry<br/>@starterculture/devlore<br/>(linked from Products section)"]
+    email["dev@starterculturestudio.com<br/>(contact address)"]
 
-    Visitor["Site visitor / browser"] --> Domain
-    ContactSection["Contact section / footer"] --> Email["dev@starterculturestudio.com"]
+    site -->|deployed to| ghpages
+    ghrelease -->|triggers build via| ghaction
+    ghaction -->|produces build for| ghpages
+    ghpages -->|served at custom domain via| dns
+    site -->|links out to| npm
+    site -->|displays contact| email
 ```
 
-Shows the real connection described in the docs: this single repository doubles as both the StarterCulture marketing site and the project repo that Devlore's automation targets, with a separate published npm package for Devlore itself.
+This third diagram reflects the docs' explicit statement that this single repo doubles as both the StarterCulture marketing site and the "Devlore-linked" project repo — i.e., it's wired into Devlore's own automation and it's the canonical place Devlore's product page/npm link points back to. No separate Devlore source repo is described in the material, so it isn't drawn as a distinct node beyond what's evidenced.
 
 ```mermaid
 flowchart TB
-    subgraph Repo["BubbaF377/starter-culture (single repo, dual role)"]
-        SiteFiles["Site files:\nindex.html, assets/, CNAME"]
-        ProductDoc["docs/PRODUCT.md\n(devlore:product-doc)"]
-        DevloreWorkflows["Devlore CI workflows:\ndevlore.yml\ndevlore-analyze.yml\ndevlore-capture-baseline-draft.yml\ndevlore-capture-baseline-seed.yml\ndevlore-release.yml"]
-        PagesWorkflow["pages-deploy.yml"]
-    end
+    repo["BubbaF377/starter-culture<br/>(this repo — public)"]
+    site["StarterCulture marketing site<br/>(index.html / target Astro app)"]
+    devloreDocs["docs/PRODUCT.md, TEST_PLAN.md,<br/>USER_MANUAL.md, VISUALIZER.md<br/>(Devlore project docs, dogfooded)"]
+    devloreCI[".github/workflows/devlore-*.yml<br/>(analyze, capture-baseline-draft,<br/>capture-baseline-seed, release)"]
+    devlorePkg["@starterculture/devlore<br/>on npm"]
 
-    DevloreWorkflows -->|reads/analyzes| ProductDoc
-    PagesWorkflow -->|publishes| SiteFiles
-
-    NPMPackage["@starterculture/devlore\n(published npm package,\nlinked from site's Products section)"]
-
-    SiteFiles -->|links to| NPMPackage
-    DevloreWorkflows -.produces/relates to.-> NPMPackage
+    repo --> site
+    repo --> devloreDocs
+    repo --> devloreCI
+    devloreCI -->|analyzes/documents| devloreDocs
+    site -->|Products section links to| devlorePkg
 ```

@@ -3,12 +3,13 @@
 <!-- devlore:test-plan requirement-hashes
 1=bb94fd11ce40
 2=fdba47cc6e6f
-3=47e7869cb62e
+3=8471884f470f
 4=e1b94681af3d
 5=5c11ec3c8084
 6=f29646e9d9b3
 7=f5bdd181dc64
-8=8d9cf94c08bc
+8=e62ee6891dee
+9=fdd54aa66c81
 -->
 
 ## Page Structure & Navigation
@@ -47,7 +48,7 @@
 **Steps:**
 1. Look at the header/nav area.
 2. Inspect the logo element.
-**Expected Result:** The StarterCulture wordmark logo is visibly rendered inline in the header (not a broken image/missing asset).
+**Expected Result:** The StarterCulture wordmark logo (matching `public/assets/starter-culture-logo.svg`), inlined directly in `src/pages/index.astro`, is visibly rendered in the header (not a broken image/missing asset).
 
 ### TC-BRAND-03 — Logo mark appears in hero
 **Requirement(s):** #3
@@ -55,7 +56,7 @@
 **Steps:**
 1. Scroll to the hero section.
 2. Inspect for a logo/icon mark.
-**Expected Result:** A StarterCulture logo mark (wordmark and/or avatar icon) renders correctly and inline within the hero section.
+**Expected Result:** A StarterCulture logo mark (wordmark from `public/assets/starter-culture-logo.svg` and/or avatar icon from `public/assets/starter-culture-avatar.svg`), inlined directly in `src/pages/index.astro`, renders correctly and inline within the hero section.
 
 ### TC-BRAND-04 — Logo mark appears in footer
 **Requirement(s):** #3
@@ -63,7 +64,7 @@
 **Steps:**
 1. Scroll to the footer.
 2. Inspect for a logo/icon mark.
-**Expected Result:** A StarterCulture logo mark renders correctly and inline within the footer.
+**Expected Result:** A StarterCulture logo mark (from `public/assets/starter-culture-logo.svg` and/or `public/assets/starter-culture-avatar.svg`), inlined directly in `src/pages/index.astro`, renders correctly and inline within the footer.
 
 ### TC-BRAND-05 — Brand name styled as "StarterCulture" throughout
 **Requirement(s):** #4
@@ -147,8 +148,8 @@
 ## Deployment
 
 ### TC-DEPLOY-01 — Site is reachable via GitHub Pages
-**Requirement(s):** #8
-**Preconditions:** Repo `BubbaF377/starter-culture` has at least one published GitHub Release, and `.github/workflows/pages-deploy.yml` has run successfully for that release (triggered by `release: published`), deploying `index.html`, `assets/`, and `CNAME` from that release's tag to GitHub Pages.
+**Requirement(s):** #9
+**Preconditions:** Repo `BubbaF377/starter-culture` has at least one published GitHub Release, and `.github/workflows/pages-deploy.yml` has run successfully for that release (triggered by `release: published`, building with `withastro/action@v3` after checking out that release's tag), deploying `index.html`, `assets/`, and `CNAME` from that release's tag to GitHub Pages.
 **Steps:**
 1. Navigate to the custom domain `starterculturestudio.com`.
 2. Confirm the page loads and matches the content of the latest published GitHub Release (not necessarily raw `main` HEAD).
