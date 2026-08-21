@@ -1,0 +1,211 @@
+:root {
+  --cream: #F5EFE1;
+  --paper: #FBF8F1;
+  --terracotta: #B5482B;
+  --terracotta-dark: #93381F;
+  --brown: #2B2320;
+  --brown-soft: #6B5D52;
+  --line: rgba(43, 35, 32, 0.10);
+  --moss: #3F4B3D;
+  --moss-line: rgba(245, 239, 225, 0.14);
+  --radius: 16px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--brown);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+/* Header */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(63, 75, 61, 0.92);
+  backdrop-filter: saturate(140%) blur(10px);
+  border-bottom: 1px solid var(--moss-line);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--brown);
+}
+
+.brand svg { height: 30px; width: auto; display: block; }
+
+nav { display: flex; gap: 28px; }
+
+nav a {
+  color: rgba(245, 239, 225, 0.75);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+nav a:hover { color: var(--cream); }
+
+/* Shared typography */
+.eyebrow {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  margin-bottom: 18px;
+}
+
+section { padding: 72px 0; }
+
+.section-header {
+  max-width: 620px;
+  margin: 0 auto 48px;
+  text-align: center;
+}
+
+.section-header .eyebrow { margin-bottom: 12px; }
+
+h2 {
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-weight: 500;
+  font-size: clamp(32px, 5vw, 44px);
+  margin: 0 0 14px;
+  letter-spacing: -0.01em;
+}
+
+.section-header p {
+  color: var(--brown-soft);
+  font-size: 17px;
+  margin: 0;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 13px 26px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--terracotta);
+  color: var(--paper);
+}
+
+.btn-primary:hover {
+  background: var(--terracotta-dark);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--brown);
+  border: 1px solid var(--line);
+}
+
+.btn-secondary:hover {
+  border-color: var(--terracotta);
+  color: var(--terracotta);
+}
+
+/* "Coming soon" / in-progress pill, shared by wireframe pages */
+.progress-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--terracotta-dark);
+  background: rgba(181, 72, 43, 0.10);
+  border: 1px dashed rgba(181, 72, 43, 0.35);
+  padding: 8px 16px;
+  border-radius: 999px;
+}
+
+.back-link {
+  display: block;
+  text-align: center;
+  padding: 8px 0 48px;
+}
+
+.back-link a {
+  color: var(--brown-soft);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.back-link a:hover { color: var(--terracotta); }
+
+/* Footer */
+footer {
+  background: var(--moss);
+  border-top: 1px solid var(--moss-line);
+  padding: 40px 0;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(245, 239, 225, 0.75);
+  font-size: 14px;
+}
+
+.footer-brand svg { height: 22px; width: auto; }
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+footer a {
+  color: rgba(245, 239, 225, 0.75);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+footer a:hover { color: var(--cream); }
+
+@media (max-width: 680px) {
+  nav { display: none; }
+  section { padding: 56px 0; }
+}
