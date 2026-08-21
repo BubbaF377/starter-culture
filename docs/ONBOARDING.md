@@ -5,33 +5,39 @@
 
 ## Where the important logic lives
 
-This is a small, dual-purpose repo, so "important logic" splits into two tracks rather than one deep module hierarchy:
+This is a small Astro site, so "logic" is mostly markup, shared components, and CI/CD config rather than application code. Start with these:
 
-- **`index.html`** — the entire marketing site. There's no build system, no `src/`, no framework — just a static HTML page with inlined SVGs and (per `docs/PRODUCT.md`) presumably inline/`<style>` CSS built around a defined brand palette (cream, terracotta, dark brown). If you're touching the visible site, this file and the `assets/` folder (the two logo SVGs) are essentially the whole surface area.
-- **`docs/PRODUCT.md`** — not just documentation but a load-bearing file: it explicitly warns not to move, rename, or delete it, since Devlore's tooling depends on its exact path. Read this first regardless of what you're working on.
-- **`.github/workflows/pages-deploy.yml`** — the deploy pipeline for the live site. It's the piece of "logic" most likely to surprise you (see Gotchas below): it triggers on `release: published`, not on pushes to `main`, checks out the release tag, and publishes `index.html`, `assets/`, and `CNAME` to GitHub Pages at the custom domain `starterculturestudio.com`.
-- **The `devlore-*.yml` workflows** (`analyze`, `capture-baseline-draft`, `capture-baseline-seed`, `release`) — these wire the repo into Devlore's own automation. Their exact mechanics aren't detailed in the material available, but their presence means this repo doubles as a working example/host for Devlore itself, dogfooding its own docs pipeline.
-- **`docs/TEST_PLAN.md`, `docs/USER_MANUAL.md`, `docs/VISUALIZER.md`** — exist alongside `PRODUCT.md` but their contents haven't been reviewed yet in what's available here; don't assume you know what's in them until you've actually opened them.
+- **`src/pages/index.astro`** — the homepage, a single-page scroll experience covering hero, studio, products, and contact sections. This is the core of the site.
+- **`src/pages/about.astro`** and **`src/pages/clients.astro`** — auxiliary standalone pages, reachable only from the footer, not from in-scroll navigation.
+- **`src/components/Header.astro`** and **`src/components/Footer.astro`** — shared header/footer markup, including the inlined SVG wordmark. `Header.astro` takes a `links` prop so each page can customize its nav.
+- **`src/styles/site.css`** — shared tokens, typography, and header/footer styles, imported by every page. Page-specific styles stay local in each page's own `<style>` block — don't put page-specific CSS here.
+- **`src/layouts/Layout.astro`** — the base layout wrapping pages.
+- **`.github/workflows/pages-deploy.yml`** — the deploy pipeline; this is where "how does a code change actually reach the live site" is answered, and it's non-standard (see below).
+- **`docs/PRODUCT.md`** — treat this as the living product/discovery doc and source of truth for intent. It's explicitly protected from being moved/renamed/deleted, and appears to be read by Devlore itself.
+- **The `devlore-*.yml` workflows** — these aren't part of the site's build/deploy; they're Devlore's own automation running against this repo (this repo doubles as a dogfooding project for the Devlore product being showcased on the site).
 
 ## Why past decisions were made
 
-Two recorded decisions exist, and they both describe the same underlying change (recorded twice, likely at different points), so treat them as one decision with reinforced rationale:
+- **Deploys are release-gated, not `main`-gated.** The site used to deploy on every push to `main`; it now deploys only on `release: published` (tags matching `v*`), building via `withastro/action@v3` and publishing `index.html`, `assets/`, and `CNAME` from the release tag. This was a deliberate move away from continuous deployment so that "code merged" and "site live" are distinct checkpoints, and so the custom domain (`starterculturestudio.com`, via `public/CNAME`) has a controlled cutover point rather than reflecting raw commit history.
+- **Astro was adopted (over hand-rolled static HTML)** specifically to match the stack already used by a sibling studio project, `heartland-fermenters-guild`, so the studio has one consistent tooling/deploy approach across its static sites rather than maintaining two different build styles.
+- **The site is not strictly single-page anymore.** It began as a strict single-page scroll with no navigable-away links. That invariant was relaxed specifically to allow an About page and a Client Portal page, but only reachable via the footer — in-scroll nav must still not navigate away from the homepage. This is a real, load-bearing distinction, not just a style choice.
+- **Header/Footer/site CSS were extracted into shared components** once three pages existed, specifically to avoid re-duplicating the inlined SVG wordmark and shared styling across pages. The convention going forward: shared chrome and tokens live in `Header.astro`/`Footer.astro`/`site.css`; page-specific styling stays scoped per-page.
 
-- **GitHub Pages deploys from published Releases, not `main` HEAD.** The site used to go live on every push to `main`, with no checkpoint between "merged" and "live" and no custom domain. The team deliberately moved to a model where `.github/workflows/pages-deploy.yml` only fires on `release: published` (plus manual dispatch), publishing the release tag's `index.html`, `assets/`, and `CNAME` to the custom domain `starterculturestudio.com`. The explicit tradeoff accepted: going live now requires cutting a GitHub Release — merging to `main` alone does nothing to production anymore.
-
-There's no other recorded decision history beyond this at present — don't infer additional rationale for things like the choice of static HTML over a framework, or the specific docs layout; those aren't documented as deliberate decisions here, just as the current state of things.
+There's no master architecture doc populated yet — the decisions above (drawn from commit-linked decision records) are the only recorded rationale; nothing else should be assumed beyond them.
 
 ## Common gotchas
 
-- **Merging to `main` does not update the live site.** This is the single most likely thing to trip someone up, and it's a deliberate, recorded change from the previous behavior. If you push a fix and check `starterculturestudio.com` expecting to see it, you won't — you (or someone) needs to cut a release first. Any test/verification of "is the site live" must check against the latest release's content, not raw `main`.
-- **`docs/PRODUCT.md` must not move, rename, or be deleted.** It says so itself, because Devlore's automation depends on its exact path. Treat this as a hard constraint, not a suggestion.
-- **This repo has two identities at once.** It's simultaneously the StarterCulture marketing site and a Devlore-linked project repo used to dogfood Devlore's automation. Per `PRODUCT.md`, whether these should eventually split into separate repos is an open, unresolved question — so don't assume today's structure is final, and be aware that changes you make for "the site" may have side effects on Devlore's own tooling, or vice versa.
-- **DNS for the custom domain is flagged as still pending** in the docs — if something looks unfinished or inconsistent around the `CNAME`/domain setup, that's likely why, not a bug you introduced.
-- **No build step to fall back on.** Since there's no `package.json`, bundler, or `src/` directory evident, everything in `index.html` (including inlined SVG markup) is hand-maintained directly — there's no generation step you're missing.
+- **Merging to `main` does not deploy anything.** If you're used to continuous deployment, this will surprise you — going live requires cutting a GitHub Release with a `v*` tag. Check the latest release/tag, not `main` HEAD, when verifying "what's actually live."
+- **In-scroll nav vs. footer links are governed by different rules.** Links inside the homepage's scroll sections must not navigate away from the page; links in the footer are explicitly allowed to lead to separate routes (`about.astro`, `clients.astro`). Don't casually add a homepage nav item that jumps to a new page — that breaks an intentional invariant.
+- **`docs/PRODUCT.md` is protected** — there's an explicit instruction not to move, rename, or delete it, since it's apparently used as a source of truth by Devlore's own tooling. Treat it as special, not just another doc file.
+- **Don't duplicate header/footer/shared CSS.** New pages should import `Header`/`Footer` and `src/styles/site.css` rather than inlining their own copies or redefining shared tokens — that's the pattern the extraction decision established, and drifting from it reintroduces the duplication problem it was meant to solve.
+- **The `devlore-*` workflows are not this site's CI/CD.** They're a separate concern (Devlore dogfooding itself on this repo) layered onto the same repo as the marketing site's source. Don't assume changes to `pages-deploy.yml` affect them, or vice versa — and be aware the repo intentionally serves two purposes at once (an open question in `PRODUCT.md` is whether to eventually split these into separate repos).
+- **GitHub Pages branch/tag policy must stay in sync** with the release-tag pattern (`v*`) for deploys to actually succeed — this is a manual repo-settings dependency, not something enforced by the workflow file alone.
 
 ## Where to start
 
-1. Read `docs/PRODUCT.md` in full — it's explicitly the anchor document for both the site's intent and Devlore's tooling, and it's the one file you're forbidden from restructuring casually.
-2. Open `index.html` and the two SVGs in `assets/` to see the actual current site — it's small enough to read end-to-end in one sitting.
-3. Read `.github/workflows/pages-deploy.yml` closely so the release-gated deploy model (see Decisions above) is concrete in your head before you make any change you expect to see live.
-4. Skim the remaining three docs (`TEST_PLAN.md`, `USER_MANUAL.md`, `VISUALIZER.md`) and the `devlore-*.yml` workflow filenames to get oriented on the Devlore-dogfooding side of the repo, even though their exact contents/mechanics aren't detailed here — you'll want to know they exist before you touch anything docs-adjacent.
+1. Read `docs/PRODUCT.md` first — it's the maintained source of truth for what this site/studio is and why, and will orient you faster than the code will.
+2. Open `src/pages/index.astro` alongside `src/components/Header.astro` and `Footer.astro` to see how the homepage composes shared chrome, then skim `about.astro` and `clients.astro` to see the footer-linked page pattern in practice.
+3. Read `src/styles/site.css` to understand the shared design tokens before touching any page-specific `<style>` block.
+4. Read `.github/workflows/pages-deploy.yml` to understand the release-gated deploy flow — try tracing what happens from `release: published` to the live custom domain.
+5. Skim the other `docs/*.md` files (`ONBOARDING.md`, `TEST_PLAN.md`, `USER_MANUAL.md`, `VISUALIZER.md`) for any additional project-specific conventions not captured in the decisions above.
