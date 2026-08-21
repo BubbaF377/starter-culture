@@ -9,8 +9,8 @@
 6=f29646e9d9b3
 7=f5bdd181dc64
 8=dcf3b7bd9f26
-9=9387e647dcc4
-10=9a862f622a21
+9=32aa2c19d88b
+10=80ce0f0ef2ce
 11=877e90e0e17b
 -->
 
@@ -56,18 +56,22 @@ If you want to reach the studio, scroll to the Contact section, which sits just 
 ## Meeting the Team
 <!-- requirements: #9 -->
 
-The About page (linked as "About" in the footer of every page) gives a fuller picture of the studio than the short blurb on the homepage, along with a team section introducing the people behind StarterCulture.
+The About page is being built out to give a fuller picture of the studio than the short blurb on the homepage, along with a team section introducing the people behind StarterCulture.
 
-Right now, this page is still a work in progress, and it's labeled with a "Page in progress" badge so that's clear. You'll see a card for Christian, the studio's founder, along with placeholder card slots reserved for future teammates. Some of these cards currently show placeholder avatars and "bio coming soon" text where a real photo and bio will eventually go. Check back on this page as the team grows and more bios are filled in.
+Right now, this page is still a work in progress, and it's labeled with a "Page in progress" badge so that's clear. You'll see a card for Christian, the studio's founder, along with placeholder card slots reserved for future teammates. Some of these cards currently show placeholder avatars and "bio coming soon" text where a real photo and bio will eventually go.
+
+The page file currently lives at `src/pages/_about.astro` — note the leading underscore, which excludes it from Astro's file-based routing. That means the page isn't built or reachable at any URL yet, and there's no footer link to it. Once the content is filled out and ready to publish, the file will be renamed to `about.astro` and a footer link will be added so it's easy to find from anywhere on the site. Check back as the team grows and this page goes live.
 
 [↑ Back to table of contents](#table-of-contents)
 
 ## Checking the Client Portal
 <!-- requirements: #10 -->
 
-The Client Portal (linked as "Client Portal" in the footer) is where StarterCulture clients will eventually be able to log in and check on the status of their work. It's linked from the footer of every page, so it's easy to find no matter where you are on the site.
+The Client Portal is where StarterCulture clients will eventually be able to log in and check on the status of their work.
 
-At this stage, the portal is a preview only, clearly labeled "Coming soon." You'll see a login form with email and password fields, but the fields are disabled and there's no way to submit the form — logging in isn't possible yet, and there's no dashboard behind it. If you're a prospective or current client curious about this feature, know that it's on its way but not yet functional; for status updates in the meantime, reach out directly via the email address in the Contact section.
+At this stage, the portal is a preview only, clearly labeled "Coming soon." You'll see a login form with email and password fields, but the fields are disabled and there's no way to submit the form — logging in isn't possible yet, and there's no dashboard behind it.
+
+The page file currently lives at `src/pages/_clients.astro` — note the leading underscore, which excludes it from Astro's file-based routing, so the page isn't built or reachable at any URL yet, and it isn't linked from the footer. Once real authentication and dashboard content are in place, the file will be renamed to `clients.astro` and a footer link will be added. If you're a prospective or current client curious about this feature, know that it's on its way but not yet functional; for status updates in the meantime, reach out directly via the email address in the Contact section.
 
 [↑ Back to table of contents](#table-of-contents)
 
