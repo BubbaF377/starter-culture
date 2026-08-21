@@ -1,4 +1,4 @@
-<!-- devlore:test-plan source-hash:f654157eb352e140bae4625c6f11242bd358407807d7c6b85b0d7be05ef2dbad -->
+<!-- devlore:test-plan source-hash:ab7a06df95c9654d1e275570d9935b9744218b8e2537abbe2367276e546c9917 -->
 > **Do not move, rename, or edit this file.** Devlore generates and maintains this test plan automatically from `docs/PRODUCT.md`'s requirements — manual edits will be overwritten the next time Devlore detects the requirements have changed. To change what's tested, update `docs/PRODUCT.md` itself.
 <!-- devlore:test-plan requirement-hashes
 1=6cb2b5fd6eac
@@ -9,158 +9,176 @@
 6=f29646e9d9b3
 7=f5bdd181dc64
 8=dcf3b7bd9f26
-9=9387e647dcc4
-10=9a862f622a21
+9=32aa2c19d88b
+10=80ce0f0ef2ce
 11=877e90e0e17b
 -->
 
-## Page Structure & Navigation
+## Homepage Structure
 
-### TC-NAV-01 — Site is a single scrolling page with no multi-page navigation
+### TC-HOME-01 — Homepage renders as single scrolling page with all sections in order
 **Requirement(s):** #1
-**Preconditions:** Site is loaded in a browser.
+**Preconditions:** Browser open, navigate to starterculturestudio.com (or local build root).
 **Steps:**
-1. Load the site's home URL.
-2. Inspect the header/nav area for any links that would navigate to a different page or URL.
-3. Click any nav links present (if any), excluding the footer's "About" and "Client Portal" links which intentionally lead to separate pages.
-**Expected Result:** No header/nav links navigate away to a separate page; any header/nav links instead scroll to a section of the same page, and the URL path never changes to a new page. The footer's "About" and "Client Portal" links are the only links that intentionally navigate to separate pages (`about.astro` and `clients.astro`), consistent with those pages not being part of the homepage scroll.
+1. Load the homepage.
+2. Scroll from top to bottom, noting each section as it appears.
+**Expected Result:** Sections appear in this order: header/nav, hero, studio/about, products, contact, footer — all on one page, with no separate page navigation required.
 
-### TC-NAV-02 — All required sections are present in order
-**Requirement(s):** #1
-**Preconditions:** Site is loaded in a browser.
-**Steps:**
-1. Scroll from the top of the page to the bottom.
-2. Note each distinct section encountered.
-**Expected Result:** The page contains, in a sensible top-to-bottom order, a header/nav, hero, studio/about, products, contact, and footer section — with no missing sections; the About and Client Portal content lives on separate pages (`about.astro`/`clients.astro`) linked from the footer, not within this scroll.
+## Branding & Visual Style
 
-## Visual Style & Branding
-
-### TC-BRAND-01 — Color palette matches brand spec
+### TC-BRAND-01 — Header and footer use moss green background with cream text
 **Requirement(s):** #2
-**Preconditions:** Site is loaded in a browser with a color-picker/dev tools available.
+**Preconditions:** Homepage loaded.
 **Steps:**
-1. Sample the background color(s) used across sections.
-2. Sample the accent color used for highlights/buttons/pills.
-3. Sample the text/dark color used for headings or dark backgrounds.
-4. Sample the header and footer background color and their text/nav color.
-**Expected Result:** Background colors match cream tones (`#F5EFE1` / `#FBF8F1`), accent color matches terracotta (`#B5482B`), dark text/background elements match dark brown (`#2B2320`), and the header/footer background matches moss green (`#3F4B3D`) with cream-toned text/nav for contrast. No other unrelated colors appear as primary theme colors.
+1. Inspect the header background color.
+2. Inspect the footer background color.
+3. Check nav/text color on both.
+**Expected Result:** Header and footer both use the moss green (`#3F4B3D`) background, with nav links/text rendered in a cream tone for legible contrast.
 
-### TC-BRAND-02 — Wordmark logo appears in header
+### TC-BRAND-02 — Cream, terracotta, and dark brown palette used elsewhere on page
+**Requirement(s):** #2
+**Steps:**
+1. Inspect hero and section backgrounds for cream tones (`#F5EFE1`/`#FBF8F1`).
+2. Inspect accent elements (buttons, pills, links) for terracotta (`#B5482B`).
+3. Inspect body copy color for dark brown (`#2B2320`).
+**Expected Result:** All three colors appear consistently as described; no unrelated colors used for these roles.
+
+### TC-BRAND-03 — Logo asset files load correctly
 **Requirement(s):** #3
-**Preconditions:** Site is loaded in a browser.
+**Preconditions:** Site deployed or served locally.
 **Steps:**
-1. Look at the header/nav area.
-2. Inspect the logo element.
-**Expected Result:** The StarterCulture wordmark logo (matching `public/assets/starter-culture-logo.svg`), inlined directly in `src/components/Header.astro`, is visibly rendered in the header (not a broken image/missing asset), with its `<text>` fill and sans-serif `font-family` matching the uploaded logo asset (not serif).
+1. Navigate directly to `/assets/starter-culture-logo.svg`.
+2. Navigate directly to `/assets/starter-culture-avatar.svg`.
+**Expected Result:** Both URLs return valid, renderable SVGs — the first a full wordmark, the second an icon-only mark.
 
-### TC-BRAND-03 — Logo mark appears in hero
+### TC-BRAND-04 — Inline header/footer wordmark uses sans-serif font
 **Requirement(s):** #3
-**Preconditions:** Site is loaded in a browser.
 **Steps:**
-1. Scroll to the hero section.
-2. Inspect for a logo/icon mark.
-**Expected Result:** A StarterCulture logo mark (wordmark from `public/assets/starter-culture-logo.svg` and/or avatar icon from `public/assets/starter-culture-avatar.svg`), inlined directly in `src/pages/index.astro`, renders correctly and inline within the hero section.
+1. Open browser devtools on the homepage.
+2. Inspect the `<text>` element inside the inlined logo SVG in the header.
+3. Repeat for the footer.
+**Expected Result:** The `font-family` on both is sans-serif, matching the logo asset — never serif.
 
-### TC-BRAND-04 — Logo mark appears in footer
-**Requirement(s):** #3
-**Preconditions:** Site is loaded in a browser.
-**Steps:**
-1. Scroll to the footer.
-2. Inspect for a logo/icon mark.
-**Expected Result:** A StarterCulture logo mark (from `public/assets/starter-culture-logo.svg` and/or `public/assets/starter-culture-avatar.svg`), inlined directly in `src/components/Footer.astro`, renders correctly and inline within the footer, with its `<text>` fill and sans-serif `font-family` matching the uploaded logo asset (not serif).
-
-### TC-BRAND-05 — Brand name styled as "StarterCulture" throughout
+### TC-BRAND-05 — Brand name styled "StarterCulture" consistently
 **Requirement(s):** #4
-**Preconditions:** Site is loaded in a browser with access to page source/dev tools.
 **Steps:**
-1. Read all visible on-page copy referencing the brand name (header, hero, about, footer).
-2. Inspect the `<title>` tag and meta tags (e.g. `og:title`, `description`) via page source.
-3. Inspect `aria-label` attributes on logo/nav elements via dev tools.
-**Expected Result:** Every instance of the brand name outside the logo graphic itself reads "StarterCulture" — one word, capital S and C, no space — in visible copy, titles, meta tags, and aria-labels.
+1. Check the browser tab title.
+2. View page source for the meta description tag.
+3. Check hero copy, section copy, and any `aria-label` attributes on logo links.
+**Expected Result:** Every instance reads "StarterCulture" as one word with no space; never "Starter Culture."
 
 ## Hero Section
 
-### TC-HERO-01 — Hero tagline text is correct
+### TC-HERO-01 — Hero brand line is the dominant headline
 **Requirement(s):** #5
-**Preconditions:** Site is loaded in a browser.
+**Preconditions:** Homepage loaded, hero section in view.
 **Steps:**
-1. Scroll to the hero section.
-2. Read the small italic tagline beneath the prominent "StarterCulture Software Studio" brand line.
-**Expected Result:** The tagline reads exactly "Small studio. Big ideas. AI-native." and is displayed as a small italic line beneath the larger, prominent brand line, not as the dominant headline.
+1. Locate the "StarterCulture Software Studio" text (`.hero-brand span`).
+2. Compare its font size/visual weight to the `<h1>` tagline below it.
+**Expected Result:** The brand line renders as large, prominent sans-serif hero text — clearly the dominant visual element in the hero.
 
-### TC-HERO-02 — Hero supporting line describes AI as a first-class collaborator
+### TC-HERO-02 — H1 tagline renders as small italic subline
 **Requirement(s):** #5
-**Preconditions:** Site is loaded in a browser.
 **Steps:**
-1. Scroll to the hero section.
-2. Read the supporting/subhead line beneath the small italic tagline.
-**Expected Result:** The supporting line describes the studio building with AI as a first-class collaborator from the first line of code (wording may vary but this meaning must be present).
+1. Locate the `<h1>` text "Small studio. Big ideas. AI-native."
+2. Inspect its font size and style relative to the hero brand line.
+**Expected Result:** The `<h1>` is visually smaller and italicized, positioned beneath the hero brand line — not styled as the dominant headline.
+
+### TC-HERO-03 — Section headings sized at increased scale
+**Requirement(s):** #5
+**Steps:**
+1. Inspect the computed font size of each `<h2>` (Studio, Products, Contact) at desktop width.
+2. Resize the browser to a narrow mobile width and re-check.
+**Expected Result:** `<h2>` font size stays within `clamp(32px, 5vw, 44px)` across viewport widths tested.
+
+### TC-CONTACT-01 — Contact section background matches Studio section
+**Requirement(s):** #5
+**Steps:**
+1. Scroll to the Studio section and note its background color.
+2. Scroll to the Products section and note its background color.
+3. Scroll to the Contact section and note its background color.
+**Expected Result:** Contact section background matches the Studio section's `--paper` background and is visually distinct from the Products section above it.
 
 ## Products Section
 
-### TC-PROD-01 — Devlore is listed with a "Beta" status pill
+### TC-PROD-01 — Devlore shows "Beta" status pill
 **Requirement(s):** #6
-**Preconditions:** Site is loaded in a browser.
+**Preconditions:** Homepage loaded, Products section in view.
 **Steps:**
-1. Scroll to the products section.
-2. Locate the Devlore product entry.
-3. Inspect its status pill.
-**Expected Result:** Devlore's entry displays a status pill labeled "Beta".
+1. Locate the Devlore product entry.
+2. Check the status pill next to its name.
+**Expected Result:** Pill displays "Beta."
 
-### TC-PROD-02 — Devlore description text is correct
+### TC-PROD-02 — Devlore description text matches source copy
 **Requirement(s):** #6
-**Preconditions:** Site is loaded in a browser.
 **Steps:**
-1. Scroll to the Devlore entry in the products section.
-2. Read the product description text.
-**Expected Result:** The description reads: "Devlore is an agentic knowledge base that automatically documents every push across your project repos, with human review only at release time."
+1. Read the full description text under the Devlore entry.
+**Expected Result:** Text reads exactly: "Devlore is an agentic knowledge base that automatically documents every push across your project repos, with human review only at release time."
 
-### TC-PROD-03 — Devlore links out to its npm package
+### TC-PROD-03 — Devlore npm link opens correct package page
 **Requirement(s):** #6
-**Preconditions:** Site is loaded in a browser.
 **Steps:**
-1. Scroll to the Devlore entry in the products section.
-2. Locate and click the npm package link.
-**Expected Result:** The link opens/navigates to `https://www.npmjs.com/package/@starterculture/devlore` and successfully loads the npm package page.
+1. Click the Devlore npm link.
+**Expected Result:** Browser navigates to `https://www.npmjs.com/package/@starterculture/devlore` and the npm package page loads successfully.
 
-## Contact & Footer
-
-### TC-CONTACT-01 — Contact section displays correct studio email
-**Requirement(s):** #7
-**Preconditions:** Site is loaded in a browser.
+### TC-PROD-04 — Status pill only shows currently valid stage labels
+**Requirement(s):** #6
 **Steps:**
-1. Scroll to the contact section.
-2. Read the displayed email address.
-**Expected Result:** The email address shown is exactly `dev@starterculturestudio.com`.
+1. Review all product entries and their status pills currently on the page.
+**Expected Result:** Every pill reads either "In development" or "Beta" — no other/undefined status text appears.
 
-### TC-CONTACT-02 — Footer displays correct studio email
-**Requirement(s):** #7
-**Preconditions:** Site is loaded in a browser.
+## Navigation & Footer Links
+
+### TC-NAV-01 — Header nav links scroll to correct homepage sections
+**Requirement(s):** #1, #8
+**Preconditions:** Homepage loaded.
 **Steps:**
-1. Scroll to the footer.
-2. Read the displayed email address.
-**Expected Result:** The email address shown is exactly `dev@starterculturestudio.com`.
+1. Click each header nav item in turn (e.g. Studio, Products, Contact).
+**Expected Result:** Each click scrolls the page to the corresponding section anchor smoothly, without a full page reload.
 
-### TC-CONTACT-03 — Contact email is a working mailto link (if styled as a link)
-**Requirement(s):** #7
-**Preconditions:** Site is loaded in a browser; default mail client configured or observable via browser prompt.
+### TC-NAV-02 — Footer does not link to About or Client Portal
+**Requirement(s):** #9, #10
 **Steps:**
-1. Click the contact email address in the contact section or footer.
-**Expected Result:** If the email is a clickable link, it triggers a `mailto:dev@starterculturestudio.com` action (opens mail client or browser mailto prompt) rather than navigating to a broken or unrelated URL.
+1. Inspect all links present in the footer.
+**Expected Result:** No link to `/about` or `/clients` appears in the footer (pages are not yet published).
 
-## Deployment
+### TC-NAV-03 — Direct navigation to /about and /clients returns not-found
+**Requirement(s):** #9, #10
+**Steps:**
+1. Manually enter `starterculturestudio.com/about` in the browser address bar.
+2. Manually enter `starterculturestudio.com/clients` in the browser address bar.
+**Expected Result:** Both requests return a 404/not-found page — neither route is built or reachable.
 
-### TC-DEPLOY-01 — Site is reachable via GitHub Pages
+## Deployment & Domain
+
+### TC-DEPLOY-01 — Custom apex domain loads site over valid HTTPS
 **Requirement(s):** #11
-**Preconditions:** Repo `BubbaF377/starter-culture` has at least one published GitHub Release, and `.github/workflows/pages-deploy.yml` has run successfully for that release (triggered by `release: published`, building with `withastro/action@v3` after checking out that release's tag), deploying `index.html`, `assets/`, and `CNAME` from that release's tag to GitHub Pages.
+**Preconditions:** DNS propagated, certificate issued.
 **Steps:**
-1. Navigate to the custom domain `starterculturestudio.com`.
-2. Confirm the page loads and matches the content of the latest published GitHub Release (not necessarily raw `main` HEAD).
-**Expected Result:** The StarterCulture site loads correctly at `starterculturestudio.com`, reflecting the latest published GitHub Release, matching the site seen in other test cases.
+1. Navigate to `https://starterculturestudio.com`.
+**Expected Result:** Site loads with a valid TLS certificate and no browser security warnings.
+
+### TC-DEPLOY-02 — www subdomain resolves and loads site
+**Requirement(s):** #11
+**Steps:**
+1. Navigate to `https://www.starterculturestudio.com`.
+**Expected Result:** Site loads correctly (resolved via CNAME to `bubbaf377.github.io`) with a valid certificate and no warnings.
+
+### TC-DEPLOY-03 — Live site reflects latest published release, not unreleased main
+**Requirement(s):** #11
+**Preconditions:** A commit exists on `main` that is newer than the latest published GitHub Release tag.
+**Steps:**
+1. Compare visible content/version on the live site against the latest GitHub Release tag's content.
+2. Compare it against the latest commit on `main` if that differs from the release tag.
+**Expected Result:** Live site content matches the latest published release tag, not any newer unreleased commits on `main`.
 
 ## Out of scope
 
-- **Custom domain DNS setup (`starterculturestudio.com`)** — explicitly listed as an open question/not yet done; no live domain to test against.
-- **Future products beyond Devlore** — explicitly described as not-yet-decided/future work, nothing to click through.
-- **Repo structure decision (site repo vs. Devlore repo separation)** — open question with no user-facing behavior; architectural/organizational only.
-- **Separate logo asset files (`assets/starter-culture-logo.svg`, `assets/starter-culture-avatar.svg`) existing on disk** — covered by the inlined-logo UI checks (TC-BRAND-02/03/04); raw file presence is a repo/build concern, not a clickable behavior.
+- **About page content (team cards, bios, narrative)** — page is a wireframe (`_about.astro`), intentionally unlinked and unbuilt (#9).
+- **Client portal login form/dashboard** — wireframe only (`_clients.astro`), intentionally unlinked, no real auth exists (#10).
+- **Client login auth approach** — open question, no implementation decided yet.
+- **Team member roster/photos beyond Christian** — open question, content not yet collected.
+- **`https_enforced` flag toggle** — currently `false` by design per open questions; not yet enabled.
+- **Future products beyond Devlore** — open question, nothing to test yet.
+- **Repo structure (single repo vs. split for site/Devlore)** — organizational open question, no user-facing behavior.
+- **Shared component architecture (`links` prop on Header, `site.css` token sharing), Pages workflow YAML internals, and branch policy tag-pattern config** — architectural/CI concerns with no distinct click-path beyond what's already verified visually in the Branding and Deploy sections above.
