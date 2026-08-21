@@ -10,7 +10,7 @@
 7=f5bdd181dc64
 8=4d6e6fc97e0b
 9=a6047b28b63c
-10=05d204fae865
+10=47bcbddb0bad
 11=f5a4398069d8
 12=73c935047264
 -->
@@ -139,16 +139,18 @@
 
 ### TC-NAV-02 — Footer does not link to About page; Login dropdown links to Client Login and Company Login
 **Requirement(s):** #9, #10
+**Preconditions:** Site is running (locally or deployed) and the page footer is visible.
 **Steps:**
 1. Inspect all links present in the footer, including the Login dropdown menu.
-**Expected Result:** No link to `/about` appears in the footer (page not yet published — leading-underscore `_about.astro` is excluded from routing). The footer's Login dropdown contains "Client Login" and "Company Login" options linking to `/client-login` and `/company-login` respectively — both pages are live and routable, though each still carries a "🚧 Not yet connected — UI preview only" badge since real auth isn't wired up yet.
+**Expected Result:** No link to `/about` appears in the footer (page not yet published — leading-underscore `_about.astro` is excluded from routing). The footer's Login dropdown (a `<details>`/`<summary>` element styled via `.login-dropdown`/`.login-menu`, opening upward so it stays on-screen) contains "Client Login" and "Company Login" options linking to `/client-login` and `/company-login` respectively — both pages are live and routable, though each still carries a "🚧 Not yet connected — UI preview only" badge since real auth isn't wired up yet.
 
 ### TC-NAV-03 — Direct navigation to /about returns not-found; /client-login and /company-login are reachable
 **Requirement(s):** #9, #10
+**Preconditions:** Site is deployed and accessible at starterculturestudio.com (or equivalent local dev server).
 **Steps:**
 1. Manually enter `starterculturestudio.com/about` in the browser address bar.
 2. Manually enter `starterculturestudio.com/client-login` and `starterculturestudio.com/company-login` in the browser address bar.
-**Expected Result:** The `/about` request returns a 404/not-found page — the route is not built (excluded via leading underscore, no real names finalized). The `/client-login` and `/company-login` requests successfully load their respective UI-preview pages (each displaying a "🚧 Not yet connected — UI preview only" badge), not a 404.
+**Expected Result:** The `/about` request returns a 404/not-found page — the route is not built (excluded via leading underscore, no real names finalized). The `/client-login` and `/company-login` requests successfully load their respective UI-preview pages (each displaying a "🚧 Not yet connected — UI preview only" badge), not a 404. On `/client-login`, submitting the Client ID form reveals a passcode-entry step client-side (with a "← Use a different Client ID" link back), and on `/company-login`, submitting the email form reveals a "check your email" confirmation step client-side — no real lookup, OTP email, or magic-link email is sent yet in either case.
 
 ## Deployment & Domain
 
