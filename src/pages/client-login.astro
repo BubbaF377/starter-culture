@@ -1,0 +1,79 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/site.css';
+---
+
+<Layout
+  title="Client Login — StarterCulture"
+  description="Client login for StarterCulture — sign in to see working models, documentation, and other materials for your project."
+>
+  <Header links={[{ href: '/', label: 'Home' }]} />
+
+  <main class="auth-main">
+    <div class="login-card">
+      <div class="lock-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#B5482B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="10" width="16" height="10" rx="2"/>
+          <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+        </svg>
+      </div>
+      <h1>Client Login</h1>
+      <p class="sub">This page is for StarterCulture clients. Log in here to see working models, documentation, and other materials for your project.</p>
+
+      <span class="progress-badge">🚧 Not yet connected — UI preview only</span>
+
+      <div id="step-id">
+        <form id="client-id-form" novalidate>
+          <div class="field">
+            <label for="client-id">Client ID</label>
+            <input type="text" id="client-id" name="client-id" placeholder="e.g. A1B2C3" maxlength="6" autocomplete="off" autocapitalize="characters" required />
+          </div>
+          <button type="submit">Continue</button>
+        </form>
+      </div>
+
+      <div id="step-otp" hidden>
+        <p class="otp-note">We've sent a one-time passcode to the email on file for this Client ID. Enter it below to continue.</p>
+        <form id="otp-form" novalidate>
+          <div class="field">
+            <label for="otp">Passcode</label>
+            <input type="text" id="otp" name="otp" placeholder="000000" maxlength="6" autocomplete="one-time-code" inputmode="numeric" required />
+          </div>
+          <button type="submit">Verify</button>
+        </form>
+        <button type="button" id="otp-back" class="link-btn">&larr; Use a different Client ID</button>
+      </div>
+
+      <p id="login-note">Don't have a Client ID? Reach out at <a href="mailto:dev@starterculturestudio.com">dev@starterculturestudio.com</a>.</p>
+    </div>
+  </main>
+
+  <p class="back-link"><a href="/">&larr; Back to home</a></p>
+
+  <Footer />
+
+  <script>
+    const idForm = document.querySelector<HTMLFormElement>('#client-id-form');
+    const otpForm = document.querySelector<HTMLFormElement>('#otp-form');
+    const stepId = document.querySelector<HTMLDivElement>('#step-id');
+    const stepOtp = document.querySelector<HTMLDivElement>('#step-otp');
+    const backBtn = document.querySelector<HTMLButtonElement>('#otp-back');
+
+    idForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (stepId) stepId.hidden = true;
+      if (stepOtp) stepOtp.hidden = false;
+    });
+
+    otpForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+    });
+
+    backBtn?.addEventListener('click', () => {
+      if (stepOtp) stepOtp.hidden = true;
+      if (stepId) stepId.hidden = false;
+    });
+  </script>
+</Layout>

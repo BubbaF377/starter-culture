@@ -33,6 +33,13 @@ const {
     </a>
     <nav>
       {links.map((link) => <a href={link.href}>{link.label}</a>)}
+      <details class="login-dropdown">
+        <summary>Login</summary>
+        <div class="login-menu">
+          <a href="/client-login">Client Login</a>
+          <a href="/company-login">Company Login</a>
+        </div>
+      </details>
     </nav>
   </div>
 </header>
