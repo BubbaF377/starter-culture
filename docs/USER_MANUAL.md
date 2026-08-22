@@ -10,7 +10,7 @@
 7=f5bdd181dc64
 8=4d6e6fc97e0b
 9=a6047b28b63c
-10=47bcbddb0bad
+10=ec96e2b4f1a0
 11=f5a4398069d8
 12=73c935047264
 -->
@@ -77,7 +77,7 @@ Pick whichever applies to you to go to the matching login page. If you click els
 
 Choosing **Client Login** from the Login menu takes you to a page explaining that it's for StarterCulture clients to view working models, documentation, and other project materials.
 
-On this page you'll enter the **Client ID** that StarterCulture issued to you (a short 6-character alphanumeric code — this is not your email address). Submitting the form currently advances you to a passcode-entry step. If you entered the wrong Client ID or just want to start over, use the "← Use a different Client ID" link to go back and re-enter it.
+On this page you'll enter the **Client ID** that StarterCulture issued to you (a short 6-character alphanumeric code — this is not your email address; StarterCulture generates and hands you this code when your client record is created). Submitting the form currently advances you to a passcode-entry step. If you entered the wrong Client ID or just want to start over, use the "← Use a different Client ID" link to go back and re-enter it.
 
 Note that this page currently carries a "🚧 Not yet connected — UI preview only" badge — the full sign-in flow (looking up your Client ID against StarterCulture's client records, emailing you a one-time passcode, and verifying it to unlock your actual project content) isn't live yet, so this page is a preview of how the flow will work rather than a working login. If you're an existing client waiting on project materials, continue to coordinate with the studio directly using the contact address above in the meantime.
 
