@@ -381,6 +381,21 @@ footer .login-menu {
   text-align: center;
 }
 
+.login-card .form-error {
+  font-size: 13px;
+  color: var(--terracotta-dark);
+  background: rgba(181, 72, 43, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0 0 16px;
+  text-align: left;
+}
+
+.login-card button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 680px) {
   nav { display: none; }
   section { padding: 56px 0; }

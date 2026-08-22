@@ -22,9 +22,8 @@ import '../styles/site.css';
       <h1>Client Login</h1>
       <p class="sub">This page is for StarterCulture clients. Log in here to see working models, documentation, and other materials for your project.</p>
 
-      <span class="progress-badge">🚧 Not yet connected — UI preview only</span>
-
       <div id="step-id">
+        <p id="id-error" class="form-error" hidden></p>
         <form id="client-id-form" novalidate>
           <div class="field">
             <label for="client-id">Client ID</label>
@@ -36,6 +35,7 @@ import '../styles/site.css';
 
       <div id="step-otp" hidden>
         <p class="otp-note">We've sent a one-time passcode to the email on file for this Client ID. Enter it below to continue.</p>
+        <p id="otp-error" class="form-error" hidden></p>
         <form id="otp-form" novalidate>
           <div class="field">
             <label for="otp">Passcode</label>
@@ -55,25 +55,116 @@ import '../styles/site.css';
   <Footer />
 
   <script>
+    import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_FUNCTIONS_URL } from '../lib/supabase-config';
+
     const idForm = document.querySelector<HTMLFormElement>('#client-id-form');
     const otpForm = document.querySelector<HTMLFormElement>('#otp-form');
     const stepId = document.querySelector<HTMLDivElement>('#step-id');
     const stepOtp = document.querySelector<HTMLDivElement>('#step-otp');
     const backBtn = document.querySelector<HTMLButtonElement>('#otp-back');
+    const idError = document.querySelector<HTMLParagraphElement>('#id-error');
+    const otpError = document.querySelector<HTMLParagraphElement>('#otp-error');
+    const clientIdInput = document.querySelector<HTMLInputElement>('#client-id');
+    const otpInput = document.querySelector<HTMLInputElement>('#otp');
 
-    idForm?.addEventListener('submit', (e) => {
+    let currentClientId = '';
+
+    function setError(el: HTMLParagraphElement | null, message: string | null) {
+      if (!el) return;
+      if (message) {
+        el.textContent = message;
+        el.hidden = false;
+      } else {
+        el.hidden = true;
+      }
+    }
+
+    function setBusy(form: HTMLFormElement | null, busy: boolean) {
+      const btn = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+      if (btn) btn.disabled = busy;
+    }
+
+    const OTP_VERIFY_ERRORS: Record<string, string> = {
+      not_found: "That code doesn't match. Double-check it, or use a different Client ID to request a new one.",
+      expired: 'That passcode has expired. Go back and request a new one.',
+      too_many_attempts: 'Too many incorrect attempts. Go back and request a new passcode.',
+      incorrect_code: 'Incorrect passcode. Please try again.',
+      invalid_request: 'Something went wrong. Please try again.',
+    };
+
+    idForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (stepId) stepId.hidden = true;
-      if (stepOtp) stepOtp.hidden = false;
+      setError(idError, null);
+      const clientId = clientIdInput?.value.trim().toUpperCase() ?? '';
+      if (!/^[A-Z0-9]{6}$/.test(clientId)) {
+        setError(idError, 'Client IDs are 6 characters (letters and numbers).');
+        return;
+      }
+
+      setBusy(idForm, true);
+      try {
+        await fetch(`${SUPABASE_FUNCTIONS_URL}/client-otp-request`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ client_id: clientId }),
+        });
+        currentClientId = clientId;
+        if (stepId) stepId.hidden = true;
+        if (stepOtp) stepOtp.hidden = false;
+        otpInput?.focus();
+      } catch {
+        setError(idError, "Couldn't reach the server. Check your connection and try again.");
+      } finally {
+        setBusy(idForm, false);
+      }
     });
 
-    otpForm?.addEventListener('submit', (e) => {
+    otpForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
+      setError(otpError, null);
+      const code = otpInput?.value.trim() ?? '';
+      if (!code) return;
+
+      setBusy(otpForm, true);
+      try {
+        const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/client-otp-verify`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ client_id: currentClientId, code }),
+        });
+        const data = await res.json();
+
+        if (data.ok && data.token) {
+          localStorage.setItem(
+            'sc_client_session',
+            JSON.stringify({ client_id: currentClientId, token: data.token })
+          );
+          window.location.href = '/client-portal';
+          return;
+        }
+
+        setError(otpError, OTP_VERIFY_ERRORS[data.error] ?? 'Something went wrong. Please try again.');
+      } catch {
+        setError(otpError, "Couldn't reach the server. Check your connection and try again.");
+      } finally {
+        setBusy(otpForm, false);
+      }
     });
 
     backBtn?.addEventListener('click', () => {
+      setError(otpError, null);
+      if (otpInput) otpInput.value = '';
       if (stepOtp) stepOtp.hidden = true;
       if (stepId) stepId.hidden = false;
+      clientIdInput?.focus();
     });
   </script>
 </Layout>

@@ -22,9 +22,8 @@ import '../styles/site.css';
       <h1>Company Login</h1>
       <p class="sub">StarterCulture team members: sign in with your email to reach the admin area.</p>
 
-      <span class="progress-badge">🚧 Not yet connected — UI preview only</span>
-
       <div id="step-email">
+        <p id="email-error" class="form-error" hidden></p>
         <form id="company-login-form" novalidate>
           <div class="field">
             <label for="company-email">Email</label>
@@ -38,6 +37,11 @@ import '../styles/site.css';
         <p class="otp-note">If that's a recognized team email, we've sent a sign-in link to it. Click the link in that email to continue.</p>
         <button type="button" id="email-back" class="link-btn">&larr; Use a different email</button>
       </div>
+
+      <div id="step-loggedin" hidden>
+        <p class="otp-note" id="loggedin-message"></p>
+        <button type="button" id="logout-btn" class="link-btn">Log out</button>
+      </div>
     </div>
   </main>
 
@@ -46,20 +50,102 @@ import '../styles/site.css';
   <Footer />
 
   <script>
+    import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '../lib/supabase-config';
+
     const form = document.querySelector<HTMLFormElement>('#company-login-form');
     const stepEmail = document.querySelector<HTMLDivElement>('#step-email');
     const stepSent = document.querySelector<HTMLDivElement>('#step-sent');
+    const stepLoggedIn = document.querySelector<HTMLDivElement>('#step-loggedin');
     const backBtn = document.querySelector<HTMLButtonElement>('#email-back');
+    const logoutBtn = document.querySelector<HTMLButtonElement>('#logout-btn');
+    const emailInput = document.querySelector<HTMLInputElement>('#company-email');
+    const emailError = document.querySelector<HTMLParagraphElement>('#email-error');
+    const loggedInMessage = document.querySelector<HTMLParagraphElement>('#loggedin-message');
 
-    form?.addEventListener('submit', (e) => {
+    function setBusy(busy: boolean) {
+      const btn = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+      if (btn) btn.disabled = busy;
+    }
+
+    function showStep(step: 'email' | 'sent' | 'loggedin') {
+      if (stepEmail) stepEmail.hidden = step !== 'email';
+      if (stepSent) stepSent.hidden = step !== 'sent';
+      if (stepLoggedIn) stepLoggedIn.hidden = step !== 'loggedin';
+    }
+
+    form?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (stepEmail) stepEmail.hidden = true;
-      if (stepSent) stepSent.hidden = false;
+      if (emailError) emailError.hidden = true;
+      const email = emailInput?.value.trim() ?? '';
+      if (!email) return;
+
+      setBusy(true);
+      try {
+        await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            create_user: false,
+            options: { emailRedirectTo: `${window.location.origin}/company-login` },
+          }),
+        });
+      } catch {
+        // Network failure -- still fall through to the generic "check your
+        // email" step below, same reasoning as Client Login: never reveal
+        // whether an email belongs to a real team account.
+      } finally {
+        setBusy(false);
+        showStep('sent');
+      }
     });
 
-    backBtn?.addEventListener('click', () => {
-      if (stepSent) stepSent.hidden = true;
-      if (stepEmail) stepEmail.hidden = false;
+    backBtn?.addEventListener('click', () => showStep('email'));
+
+    logoutBtn?.addEventListener('click', () => {
+      sessionStorage.removeItem('sc_company_session');
+      history.replaceState(null, '', window.location.pathname);
+      showStep('email');
     });
+
+    // Magic-link callback: Supabase redirects back here with tokens in the
+    // URL hash (e.g. #access_token=...&type=magiclink).
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const accessToken = hashParams.get('access_token');
+
+    if (accessToken) {
+      fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        headers: {
+          apikey: SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+        .then((res) => res.json())
+        .then((user) => {
+          sessionStorage.setItem('sc_company_session', JSON.stringify({ email: user.email, accessToken }));
+          if (loggedInMessage) {
+            loggedInMessage.textContent = `Logged in as ${user.email}. The admin area isn't built yet — check back soon.`;
+          }
+          history.replaceState(null, '', window.location.pathname);
+          showStep('loggedin');
+        })
+        .catch(() => showStep('email'));
+    } else {
+      const stored = sessionStorage.getItem('sc_company_session');
+      if (stored) {
+        try {
+          const { email } = JSON.parse(stored);
+          if (loggedInMessage) {
+            loggedInMessage.textContent = `Logged in as ${email}. The admin area isn't built yet — check back soon.`;
+          }
+          showStep('loggedin');
+        } catch {
+          showStep('email');
+        }
+      }
+    }
   </script>
 </Layout>

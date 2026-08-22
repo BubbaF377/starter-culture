@@ -1,0 +1,126 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/site.css';
+---
+
+<Layout
+  title="Client Portal — StarterCulture"
+  description="Your StarterCulture client project."
+>
+  <Header links={[{ href: '/', label: 'Home' }]} />
+
+  <main class="auth-main">
+    <div class="login-card portal-card">
+      <p id="portal-loading">Loading your project…</p>
+
+      <div id="portal-content" hidden>
+        <span class="eyebrow" id="portal-client-id"></span>
+        <h1 id="portal-project-name"></h1>
+        <p id="portal-body"></p>
+      </div>
+
+      <p id="portal-error" class="form-error" hidden></p>
+
+      <button type="button" id="portal-logout" class="link-btn" hidden>Log out</button>
+    </div>
+  </main>
+
+  <p class="back-link"><a href="/">&larr; Back to home</a></p>
+
+  <Footer />
+
+  <script>
+    import { SUPABASE_FUNCTIONS_URL } from '../lib/supabase-config';
+
+    const loading = document.querySelector<HTMLParagraphElement>('#portal-loading');
+    const content = document.querySelector<HTMLDivElement>('#portal-content');
+    const errorEl = document.querySelector<HTMLParagraphElement>('#portal-error');
+    const logoutBtn = document.querySelector<HTMLButtonElement>('#portal-logout');
+    const clientIdEl = document.querySelector<HTMLSpanElement>('#portal-client-id');
+    const projectNameEl = document.querySelector<HTMLHeadingElement>('#portal-project-name');
+    const bodyEl = document.querySelector<HTMLParagraphElement>('#portal-body');
+
+    function showError(message: string) {
+      if (loading) loading.hidden = true;
+      if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.hidden = false;
+      }
+    }
+
+    function clearSessionAndRedirect() {
+      localStorage.removeItem('sc_client_session');
+      window.location.href = '/client-login';
+    }
+
+    logoutBtn?.addEventListener('click', clearSessionAndRedirect);
+
+    const raw = localStorage.getItem('sc_client_session');
+    if (!raw) {
+      clearSessionAndRedirect();
+    } else {
+      let token = '';
+      try {
+        token = JSON.parse(raw).token ?? '';
+      } catch {
+        token = '';
+      }
+
+      if (!token) {
+        clearSessionAndRedirect();
+      } else {
+        fetch(`${SUPABASE_FUNCTIONS_URL}/client-portal-content`, {
+          method: 'POST',
+          headers: { 'x-client-session': token },
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.ok) {
+              if (data.error === 'invalid_session') {
+                clearSessionAndRedirect();
+                return;
+              }
+              showError('Something went wrong loading your project. Please try again later.');
+              return;
+            }
+            if (loading) loading.hidden = true;
+            if (clientIdEl) clientIdEl.textContent = `Client ID: ${data.client.client_id}`;
+            if (projectNameEl) projectNameEl.textContent = data.client.project_name;
+            if (bodyEl) bodyEl.textContent = data.client.content;
+            if (content) content.hidden = false;
+            if (logoutBtn) logoutBtn.hidden = false;
+          })
+          .catch(() => {
+            showError("Couldn't reach the server. Check your connection and try again.");
+          });
+      }
+    }
+  </script>
+</Layout>
+
+<style>
+  .portal-card {
+    text-align: left;
+    max-width: 480px;
+  }
+
+  .portal-card #portal-loading {
+    text-align: center;
+    color: var(--brown-soft);
+  }
+
+  .portal-card h1 {
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    font-weight: 500;
+    font-size: 24px;
+    margin: 0 0 12px;
+  }
+
+  .portal-card #portal-body {
+    color: var(--brown-soft);
+    font-size: 15px;
+    margin: 0 0 20px;
+  }
+</style>
