@@ -22,6 +22,12 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  /* Sticky footer: short pages (login, portal, 404) still pin the footer to
+     the bottom of the viewport. */
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 .wrap {
@@ -167,6 +173,7 @@ h2 {
 
 /* Footer */
 footer {
+  margin-top: auto;
   background: var(--moss);
   border-top: 1px solid var(--moss-line);
   padding: 40px 0;
@@ -264,6 +271,7 @@ footer .login-menu {
 
 /* Auth cards (client/company login) */
 .auth-main {
+  flex: 1;
   min-height: 60vh;
   display: flex;
   align-items: center;

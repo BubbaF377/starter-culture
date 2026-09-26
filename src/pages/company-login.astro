@@ -29,7 +29,7 @@ import '../styles/site.css';
             <label for="company-email">Email</label>
             <input type="email" id="company-email" name="company-email" placeholder="you@starterculturestudio.com" autocomplete="email" required />
           </div>
-          <button type="submit">Send magic link</button>
+          <button type="submit">Send sign-in link</button>
         </form>
       </div>
 
@@ -38,9 +38,26 @@ import '../styles/site.css';
         <button type="button" id="email-back" class="link-btn">&larr; Use a different email</button>
       </div>
 
-      <div id="step-loggedin" hidden>
-        <p class="otp-note" id="loggedin-message"></p>
-        <button type="button" id="logout-btn" class="link-btn">Log out</button>
+      <div id="step-confirm" hidden>
+        <p class="otp-note">It looks like you opened the sign-in link in a different browser. Confirm your email to finish signing in.</p>
+        <p id="confirm-error" class="form-error" hidden></p>
+        <form id="confirm-form" novalidate>
+          <div class="field">
+            <label for="confirm-email">Email</label>
+            <input type="email" id="confirm-email" name="confirm-email" autocomplete="email" required />
+          </div>
+          <button type="submit">Continue</button>
+        </form>
+        <button type="button" id="confirm-back" class="link-btn">&larr; Request a new link</button>
+      </div>
+
+      <div id="step-checking" hidden>
+        <p class="otp-note">Signing you in…</p>
+      </div>
+
+      <div id="step-denied" hidden>
+        <p class="otp-note">That account doesn't have access to the admin area. If you think it should, contact <a href="mailto:dev@starterculturestudio.com">dev@starterculturestudio.com</a>.</p>
+        <button type="button" id="denied-back" class="link-btn">&larr; Use a different email</button>
       </div>
     </div>
   </main>
@@ -50,102 +67,124 @@ import '../styles/site.css';
   <Footer />
 
   <script>
-    import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '../lib/supabase-config';
+    import {
+      isSignInWithEmailLink,
+      onAuthStateChanged,
+      sendSignInLinkToEmail,
+      signInWithEmailLink,
+      signOut,
+      type User,
+    } from 'firebase/auth';
+    import { auth } from '../lib/firebase-config';
+
+    // Remembers which email requested the link, so the callback can finish
+    // sign-in without asking again (Firebase requires the email to match).
+    const EMAIL_KEY = 'sc_company_signin_email';
+
+    type Step = 'email' | 'sent' | 'confirm' | 'checking' | 'denied';
+    const steps: Record<Step, HTMLDivElement | null> = {
+      email: document.querySelector('#step-email'),
+      sent: document.querySelector('#step-sent'),
+      confirm: document.querySelector('#step-confirm'),
+      checking: document.querySelector('#step-checking'),
+      denied: document.querySelector('#step-denied'),
+    };
 
     const form = document.querySelector<HTMLFormElement>('#company-login-form');
-    const stepEmail = document.querySelector<HTMLDivElement>('#step-email');
-    const stepSent = document.querySelector<HTMLDivElement>('#step-sent');
-    const stepLoggedIn = document.querySelector<HTMLDivElement>('#step-loggedin');
-    const backBtn = document.querySelector<HTMLButtonElement>('#email-back');
-    const logoutBtn = document.querySelector<HTMLButtonElement>('#logout-btn');
     const emailInput = document.querySelector<HTMLInputElement>('#company-email');
-    const emailError = document.querySelector<HTMLParagraphElement>('#email-error');
-    const loggedInMessage = document.querySelector<HTMLParagraphElement>('#loggedin-message');
+    const confirmForm = document.querySelector<HTMLFormElement>('#confirm-form');
+    const confirmInput = document.querySelector<HTMLInputElement>('#confirm-email');
+    const confirmError = document.querySelector<HTMLParagraphElement>('#confirm-error');
 
-    function setBusy(busy: boolean) {
-      const btn = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+    function showStep(step: Step) {
+      for (const [name, el] of Object.entries(steps)) {
+        if (el) el.hidden = name !== step;
+      }
+    }
+
+    function setBusy(f: HTMLFormElement | null, busy: boolean) {
+      const btn = f?.querySelector<HTMLButtonElement>('button[type="submit"]');
       if (btn) btn.disabled = busy;
     }
 
-    function showStep(step: 'email' | 'sent' | 'loggedin') {
-      if (stepEmail) stepEmail.hidden = step !== 'email';
-      if (stepSent) stepSent.hidden = step !== 'sent';
-      if (stepLoggedIn) stepLoggedIn.hidden = step !== 'loggedin';
+    // Staff go to the admin area; any other signed-in user (e.g. someone who
+    // completed an email link without being granted the claim) is signed out.
+    async function routeSignedInUser(user: User) {
+      const { claims } = await user.getIdTokenResult();
+      if (claims.staff === true) {
+        window.location.href = '/company-admin';
+        return;
+      }
+      await signOut(auth);
+      showStep('denied');
     }
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (emailError) emailError.hidden = true;
       const email = emailInput?.value.trim() ?? '';
       if (!email) return;
 
-      setBusy(true);
+      setBusy(form, true);
       try {
-        await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
-          method: 'POST',
-          headers: {
-            apikey: SUPABASE_PUBLISHABLE_KEY,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            create_user: false,
-            options: { emailRedirectTo: `${window.location.origin}/company-login` },
-          }),
+        await sendSignInLinkToEmail(auth, email, {
+          url: `${window.location.origin}/company-login`,
+          handleCodeInApp: true,
         });
+        localStorage.setItem(EMAIL_KEY, email);
       } catch {
-        // Network failure -- still fall through to the generic "check your
-        // email" step below, same reasoning as Client Login: never reveal
-        // whether an email belongs to a real team account.
+        // Still fall through to the generic "check your email" step: never
+        // reveal whether an email belongs to a real team account.
       } finally {
-        setBusy(false);
+        setBusy(form, false);
         showStep('sent');
       }
     });
 
-    backBtn?.addEventListener('click', () => showStep('email'));
+    for (const id of ['#email-back', '#confirm-back', '#denied-back']) {
+      document.querySelector(id)?.addEventListener('click', () => showStep('email'));
+    }
 
-    logoutBtn?.addEventListener('click', () => {
-      sessionStorage.removeItem('sc_company_session');
-      history.replaceState(null, '', window.location.pathname);
-      showStep('email');
-    });
-
-    // Magic-link callback: Supabase redirects back here with tokens in the
-    // URL hash (e.g. #access_token=...&type=magiclink).
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-    const accessToken = hashParams.get('access_token');
-
-    if (accessToken) {
-      fetch(`${SUPABASE_URL}/auth/v1/user`, {
-        headers: {
-          apikey: SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-        .then((res) => res.json())
-        .then((user) => {
-          sessionStorage.setItem('sc_company_session', JSON.stringify({ email: user.email, accessToken }));
-          if (loggedInMessage) {
-            loggedInMessage.textContent = `Logged in as ${user.email}. The admin area isn't built yet — check back soon.`;
-          }
-          history.replaceState(null, '', window.location.pathname);
-          showStep('loggedin');
-        })
-        .catch(() => showStep('email'));
-    } else {
-      const stored = sessionStorage.getItem('sc_company_session');
-      if (stored) {
-        try {
-          const { email } = JSON.parse(stored);
-          if (loggedInMessage) {
-            loggedInMessage.textContent = `Logged in as ${email}. The admin area isn't built yet — check back soon.`;
-          }
-          showStep('loggedin');
-        } catch {
-          showStep('email');
+    async function completeEmailLink(email: string) {
+      showStep('checking');
+      try {
+        const { user } = await signInWithEmailLink(auth, email, window.location.href);
+        localStorage.removeItem(EMAIL_KEY);
+        history.replaceState(null, '', window.location.pathname);
+        await routeSignedInUser(user);
+      } catch {
+        showStep('confirm');
+        if (confirmError) {
+          confirmError.textContent =
+            "That link didn't work — it may have expired, or the email doesn't match. Request a new link.";
+          confirmError.hidden = false;
         }
       }
+    }
+
+    confirmForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = confirmInput?.value.trim() ?? '';
+      if (email) completeEmailLink(email);
+    });
+
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      // Callback from the emailed link.
+      const email = localStorage.getItem(EMAIL_KEY);
+      if (email) {
+        completeEmailLink(email);
+      } else {
+        showStep('confirm');
+        confirmInput?.focus();
+      }
+    } else {
+      // Already signed in as staff from an earlier visit? Skip straight ahead.
+      // (Any other session, e.g. a client's, is left alone.)
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        unsubscribe();
+        if (!user) return;
+        const { claims } = await user.getIdTokenResult();
+        if (claims.staff === true) window.location.href = '/company-admin';
+      });
     }
   </script>
 </Layout>

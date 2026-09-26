@@ -32,7 +32,9 @@ import '../styles/site.css';
   <Footer />
 
   <script>
-    import { SUPABASE_FUNCTIONS_URL } from '../lib/supabase-config';
+    import { onAuthStateChanged, signOut } from 'firebase/auth';
+    import { doc, getDoc } from 'firebase/firestore';
+    import { auth, db } from '../lib/firebase-config';
 
     const loading = document.querySelector<HTMLParagraphElement>('#portal-loading');
     const content = document.querySelector<HTMLDivElement>('#portal-content');
@@ -50,53 +52,51 @@ import '../styles/site.css';
       }
     }
 
-    function clearSessionAndRedirect() {
-      localStorage.removeItem('sc_client_session');
+    async function signOutAndRedirect() {
+      await signOut(auth).catch(() => {});
       window.location.href = '/client-login';
     }
 
-    logoutBtn?.addEventListener('click', clearSessionAndRedirect);
+    logoutBtn?.addEventListener('click', signOutAndRedirect);
 
-    const raw = localStorage.getItem('sc_client_session');
-    if (!raw) {
-      clearSessionAndRedirect();
-    } else {
-      let token = '';
+    // Fires once auth state is restored from storage (and again on sign-out,
+    // which redirects anyway).
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = '/client-login';
+        return;
+      }
+
+      const { claims } = await user.getIdTokenResult();
+      const clientId = typeof claims.client_id === 'string' ? claims.client_id : '';
+      if (!clientId) {
+        // Signed in, but not as a client (e.g. a staff session in this browser).
+        signOutAndRedirect();
+        return;
+      }
+
       try {
-        token = JSON.parse(raw).token ?? '';
-      } catch {
-        token = '';
+        const snap = await getDoc(doc(db, 'clients', clientId));
+        if (!snap.exists()) {
+          showError('Something went wrong loading your project. Please try again later.');
+          return;
+        }
+        const client = snap.data();
+        if (loading) loading.hidden = true;
+        if (clientIdEl) clientIdEl.textContent = `Client ID: ${clientId}`;
+        if (projectNameEl) projectNameEl.textContent = client.project_name;
+        if (bodyEl) bodyEl.textContent = client.content;
+        if (content) content.hidden = false;
+        if (logoutBtn) logoutBtn.hidden = false;
+      } catch (err) {
+        // permission-denied means the 7-day session in firestore.rules has lapsed.
+        if ((err as { code?: string }).code === 'permission-denied') {
+          signOutAndRedirect();
+          return;
+        }
+        showError("Couldn't reach the server. Check your connection and try again.");
       }
-
-      if (!token) {
-        clearSessionAndRedirect();
-      } else {
-        fetch(`${SUPABASE_FUNCTIONS_URL}/client-portal-content`, {
-          method: 'POST',
-          headers: { 'x-client-session': token },
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (!data.ok) {
-              if (data.error === 'invalid_session') {
-                clearSessionAndRedirect();
-                return;
-              }
-              showError('Something went wrong loading your project. Please try again later.');
-              return;
-            }
-            if (loading) loading.hidden = true;
-            if (clientIdEl) clientIdEl.textContent = `Client ID: ${data.client.client_id}`;
-            if (projectNameEl) projectNameEl.textContent = data.client.project_name;
-            if (bodyEl) bodyEl.textContent = data.client.content;
-            if (content) content.hidden = false;
-            if (logoutBtn) logoutBtn.hidden = false;
-          })
-          .catch(() => {
-            showError("Couldn't reach the server. Check your connection and try again.");
-          });
-      }
-    }
+    });
   </script>
 </Layout>
 

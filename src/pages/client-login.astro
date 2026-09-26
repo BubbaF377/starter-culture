@@ -55,7 +55,15 @@ import '../styles/site.css';
   <Footer />
 
   <script>
-    import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_FUNCTIONS_URL } from '../lib/supabase-config';
+    import { signInWithCustomToken } from 'firebase/auth';
+    import { httpsCallable } from 'firebase/functions';
+    import { auth, functions } from '../lib/firebase-config';
+
+    const clientOtpRequest = httpsCallable<{ clientId: string }, { ok: true }>(functions, 'clientOtpRequest');
+    const clientOtpVerify = httpsCallable<
+      { clientId: string; code: string },
+      { ok: true; token: string } | { ok: false; error: string }
+    >(functions, 'clientOtpVerify');
 
     const idForm = document.querySelector<HTMLFormElement>('#client-id-form');
     const otpForm = document.querySelector<HTMLFormElement>('#otp-form');
@@ -103,15 +111,7 @@ import '../styles/site.css';
 
       setBusy(idForm, true);
       try {
-        await fetch(`${SUPABASE_FUNCTIONS_URL}/client-otp-request`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-            apikey: SUPABASE_PUBLISHABLE_KEY,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ client_id: clientId }),
-        });
+        await clientOtpRequest({ clientId });
         currentClientId = clientId;
         if (stepId) stepId.hidden = true;
         if (stepOtp) stepOtp.hidden = false;
@@ -131,22 +131,10 @@ import '../styles/site.css';
 
       setBusy(otpForm, true);
       try {
-        const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/client-otp-verify`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-            apikey: SUPABASE_PUBLISHABLE_KEY,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ client_id: currentClientId, code }),
-        });
-        const data = await res.json();
+        const { data } = await clientOtpVerify({ clientId: currentClientId, code });
 
-        if (data.ok && data.token) {
-          localStorage.setItem(
-            'sc_client_session',
-            JSON.stringify({ client_id: currentClientId, token: data.token })
-          );
+        if (data.ok) {
+          await signInWithCustomToken(auth, data.token);
           window.location.href = '/client-portal';
           return;
         }

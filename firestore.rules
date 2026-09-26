@@ -1,0 +1,31 @@
+rules_version = '2';
+
+// See docs/PRODUCT.md item 10 for the auth model:
+// - Staff sign in with an email link and carry a `staff: true` custom claim.
+// - Clients sign in with a custom token (minted by clientOtpVerify) carrying a
+//   `client_id` claim, and may read only their own doc for 7 days after sign-in.
+// - client_otp_codes has no rules on purpose: only Cloud Functions (Admin SDK,
+//   which bypasses rules) touch it.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isStaff() {
+      return request.auth != null && request.auth.token.staff == true;
+    }
+
+    function isClient(clientId) {
+      return request.auth != null
+        && request.auth.token.client_id == clientId
+        && request.auth.token.auth_time > request.time.toMillis() / 1000 - 7 * 24 * 60 * 60;
+    }
+
+    match /clients/{clientId} {
+      allow read: if isStaff() || isClient(clientId);
+      allow create, update: if isStaff();
+    }
+
+    match /personnel/{personId} {
+      allow read: if true;
+      allow create, update, delete: if isStaff();
+    }
+  }
+}

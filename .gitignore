@@ -17,5 +17,8 @@ node_modules/
 # logs
 npm-debug.log*
 
-# Supabase CLI
-supabase/.temp/
+# Firebase
+.firebase/
+firebase-debug*.log
+firestore-debug.log
+functions/lib/
