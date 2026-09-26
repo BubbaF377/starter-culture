@@ -7,7 +7,7 @@ import '../styles/site.css';
 
 <Layout
   title="StarterCulture — AI-native software studio"
-  description="StarterCulture is a small software development studio building AI-native products, starting with Devlore."
+  description="StarterCulture is a small software development studio building AI-native products, starting with Devkeep."
 >
   <Header
     links={[
@@ -85,19 +85,25 @@ import '../styles/site.css';
         </div>
 
         <div class="product-card">
-          <div class="product-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#B5482B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          <div class="product-icon devkeep-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" aria-hidden="true">
+              <rect width="140" height="140" rx="28" fill="#23264D"/>
+              <path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="60.34" y="50.80" width="19.32" height="55.20" fill="#D9A441"/>
+              <rect x="60.34" y="38.80" width="4.14" height="12.00" fill="#D9A441"/>
+              <rect x="67.93" y="34.00" width="4.14" height="16.80" fill="#D9A441"/>
+              <rect x="75.52" y="38.80" width="4.14" height="12.00" fill="#D9A441"/>
+              <rect x="67.93" y="62.80" width="4.14" height="7.20" fill="#23264D"/>
             </svg>
           </div>
           <div>
             <div class="product-title-row">
-              <h3>Devlore</h3>
-              <span class="status-pill">Beta</span>
+              <h3>Devkeep</h3>
+              <span class="status-pill">In development</span>
             </div>
-            <p>Devlore is an agentic knowledge base that automatically documents every push across your project repos, with human review only at release time.</p>
-            <a class="product-link" href="https://www.npmjs.com/package/@starterculture/devlore" target="_blank" rel="noopener">View on npm →</a>
+            <p>Devkeep is one shell, one login, and six purpose-built developer tools — documentation, secrets, PR review, repo audits, and more — all reading from the same living product doc. We're looking for developers and QAs to join the alpha.</p>
+            <a class="product-link" href="/devkeep">Become an alpha tester →</a>
           </div>
         </div>
       </div>
@@ -239,6 +245,14 @@ import '../styles/site.css';
   }
 
   .product-icon svg { width: 28px; height: 28px; }
+
+  /* Product-brand badges fill the whole icon tile instead of sitting inside it. */
+  .product-icon.devkeep-icon {
+    border: none;
+    overflow: hidden;
+  }
+
+  .product-icon.devkeep-icon svg { width: 100%; height: 100%; }
 
   .product-title-row {
     display: flex;
