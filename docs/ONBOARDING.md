@@ -1,43 +1,62 @@
-<!-- devlore:onboarding -->
-> **Do not move, rename, or edit this file.** Devlore generates and maintains this onboarding guide automatically at every release — manual edits will be overwritten at the next one. To change what's documented, update the underlying sources (`docs/PRODUCT.md`, decisions, master docs) instead.
+> **Do not move, rename, or edit this file.** Devkeep generates and maintains this onboarding guide automatically at each release — manual edits will be overwritten the next time a release is tagged.
 
-# starter-culture — Onboarding Guide
+# starter-culture — orientation for new contributors
 
-## Where the important logic lives
+## What you're looking at
 
-This is a small Astro site, so "logic" is mostly markup, shared components, and CI/CD config rather than application code. Start with these:
+This repo is the marketing/brand site for **StarterCulture**, an AI-native dev studio, deployed at `starterculturestudio.com`. It also does double duty as the project hub for a *separate* studio product called **Devlore** (an agentic knowledge base, currently in Beta) — hence the `devlore-*.yml` workflows and several of the `docs/` files that don't describe this website at all. Keep these two concerns mentally separate as you read: some of what's in this repo is "build/deploy the site," and some of it is "Devlore's own tooling happens to live here too." If you're here to work on the site, the Devlore workflows are mostly noise; if you're here for Devlore, the Astro site is the noise.
 
-- **`src/pages/index.astro`** — the homepage, a single-page scroll experience covering hero, studio, products, and contact sections. This is the core of the site.
-- **`src/pages/about.astro`** and **`src/pages/clients.astro`** — auxiliary standalone pages, reachable only from the footer, not from in-scroll navigation.
-- **`src/components/Header.astro`** and **`src/components/Footer.astro`** — shared header/footer markup, including the inlined SVG wordmark. `Header.astro` takes a `links` prop so each page can customize its nav.
-- **`src/styles/site.css`** — shared tokens, typography, and header/footer styles, imported by every page. Page-specific styles stay local in each page's own `<style>` block — don't put page-specific CSS here.
-- **`src/layouts/Layout.astro`** — the base layout wrapping pages.
-- **`.github/workflows/pages-deploy.yml`** — the deploy pipeline; this is where "how does a code change actually reach the live site" is answered, and it's non-standard (see below).
-- **`docs/PRODUCT.md`** — treat this as the living product/discovery doc and source of truth for intent. It's explicitly protected from being moved/renamed/deleted, and appears to be read by Devlore itself.
-- **The `devlore-*.yml` workflows** — these aren't part of the site's build/deploy; they're Devlore's own automation running against this repo (this repo doubles as a dogfooding project for the Devlore product being showcased on the site).
+## Read first
 
-## Why past decisions were made
+1. **`docs/PRODUCT.md`** — the living product/discovery doc. Treat it as the source of truth for intent, not just background reading: it's explicitly load-bearing for Devlore's tooling, which depends on its exact path and on requirements being written a specific way (see "Devkeep format" below). If you change product behavior, this doc is where the decision should end up recorded, not just in a commit message.
+2. **`src/layouts/Layout.astro`**, **`src/components/Header.astro`** / **`Footer.astro`**, **`src/styles/site.css`** — this is the shared skeleton every page builds on. Site-wide tokens, typography, and header/footer styling live in `site.css`; page-specific styling stays in that page's own `<style>` block. This split was deliberate (see below) — don't start duplicating header/footer markup into a new page instead of importing the components.
+3. **`src/pages/index.astro`** — the actual live homepage: a single scrolling page (hero/studio/products/contact/footer).
+4. **`.github/workflows/pages-deploy.yml`** — the only workflow that touches the public website's deploy. Everything else with `devlore-` in the name is unrelated to shipping the site.
 
-- **Deploys are release-gated, not `main`-gated.** The site used to deploy on every push to `main`; it now deploys only on `release: published` (tags matching `v*`), building via `withastro/action@v3` and publishing `index.html`, `assets/`, and `CNAME` from the release tag. This was a deliberate move away from continuous deployment so that "code merged" and "site live" are distinct checkpoints, and so the custom domain (`starterculturestudio.com`, via `public/CNAME`) has a controlled cutover point rather than reflecting raw commit history.
-- **Astro was adopted (over hand-rolled static HTML)** specifically to match the stack already used by a sibling studio project, `heartland-fermenters-guild`, so the studio has one consistent tooling/deploy approach across its static sites rather than maintaining two different build styles.
-- **The site is not strictly single-page anymore.** It began as a strict single-page scroll with no navigable-away links. That invariant was relaxed specifically to allow an About page and a Client Portal page, but only reachable via the footer — in-scroll nav must still not navigate away from the homepage. This is a real, load-bearing distinction, not just a style choice.
-- **Header/Footer/site CSS were extracted into shared components** once three pages existed, specifically to avoid re-duplicating the inlined SVG wordmark and shared styling across pages. The convention going forward: shared chrome and tokens live in `Header.astro`/`Footer.astro`/`site.css`; page-specific styling stays scoped per-page.
+## Architecture, in brief
 
-There's no master architecture doc populated yet — the decisions above (drawn from commit-linked decision records) are the only recorded rationale; nothing else should be assumed beyond them.
+- Astro v5, static site generation, file-based routing under `src/pages/`. No frontend framework (no React/Vue) — it's Astro components only.
+- Static assets (logos, favicon-ish SVGs, `robots.txt`, `CNAME`) live in `public/`.
+- The wordmark logo is inlined as SVG/text directly in the header/footer components (not just referenced as an image file) specifically so its fill and font-family can be controlled from CSS. If you see raw SVG markup where you expected an `<img>` tag, that's intentional, not someone forgetting to extract an asset.
 
-## Common gotchas
+## Why things are shaped this way (decisions a newcomer could accidentally undo)
 
-- **Merging to `main` does not deploy anything.** If you're used to continuous deployment, this will surprise you — going live requires cutting a GitHub Release with a `v*` tag. Check the latest release/tag, not `main` HEAD, when verifying "what's actually live."
-- **In-scroll nav vs. footer links are governed by different rules.** Links inside the homepage's scroll sections must not navigate away from the page; links in the footer are explicitly allowed to lead to separate routes (`about.astro`, `clients.astro`). Don't casually add a homepage nav item that jumps to a new page — that breaks an intentional invariant.
-- **`docs/PRODUCT.md` is protected** — there's an explicit instruction not to move, rename, or delete it, since it's apparently used as a source of truth by Devlore's own tooling. Treat it as special, not just another doc file.
-- **Don't duplicate header/footer/shared CSS.** New pages should import `Header`/`Footer` and `src/styles/site.css` rather than inlining their own copies or redefining shared tokens — that's the pattern the extraction decision established, and drifting from it reintroduces the duplication problem it was meant to solve.
-- **The `devlore-*` workflows are not this site's CI/CD.** They're a separate concern (Devlore dogfooding itself on this repo) layered onto the same repo as the marketing site's source. Don't assume changes to `pages-deploy.yml` affect them, or vice versa — and be aware the repo intentionally serves two purposes at once (an open question in `PRODUCT.md` is whether to eventually split these into separate repos).
-- **GitHub Pages branch/tag policy must stay in sync** with the release-tag pattern (`v*`) for deploys to actually succeed — this is a manual repo-settings dependency, not something enforced by the workflow file alone.
+- **Deploys are gated on GitHub Releases, not commits to `main`.** The site was originally deployed straight from `main` HEAD; that was deliberately abandoned. Now `pages-deploy.yml` fires on `release: published` (tags matching `v*`) and builds from that tag. **Merging to `main` does not update the live site.** If you're trying to "ship" something, you need to cut a release. This was decided more than once in this project's history — it's not an accident, don't route around it by re-adding a push-triggered deploy.
+- **Astro replaced a hand-rolled static `index.html`.** This happened to bring the site in line with tooling used on another studio property (`heartland-fermenters-guild`). If you find yourself wanting to hand-edit a flat HTML file "for simplicity," that's the pre-Astro model — don't reintroduce it.
+- **The site is no longer strictly single-page.** It used to be a hard rule that no nav link could navigate away from the homepage scroll. That rule was loosened: the homepage scroll (hero/studio/products/contact) still must not link out, but the **footer** is now allowed to link to standalone pages (`about`, `clients`). If you're adding a new standalone page, follow the footer-link pattern rather than either (a) cramming it into the scroll, or (b) reasoning from the old "single page only" rule as if it still applied everywhere.
+- **`_about.astro` and `_clients.astro` are intentionally unrouted.** The leading underscore excludes them from Astro's build. They exist as wireframes-in-progress (an About/team page, and a client login portal), not because someone forgot to finish wiring them up. Do not "fix" this by dropping the underscore without checking whether the page is actually ready to go live — that's the whole point of the naming.
+- **Login is two distinct, passwordless flows, not one form.** The site's login menu was originally a single "coming soon" email/password form. That was replaced: **Client Login** (Client ID → one-time passcode) and **Company Login** (email → magic link), each reachable from a shared Login menu, are the current design. If you see references to a unified password login anywhere, that's the superseded plan — build against the two-flow split instead.
+- **Client Login does not use Supabase Auth at all**, even though Company Login does. This was a considered reversal: an earlier plan had Client Login riding on Supabase's built-in email-OTP (with a custom Client ID→email lookup in front of it), which was dropped because it would have broken a simplifying assumption the project wants to keep — that in Supabase Row Level Security policies, `to authenticated` can always mean "is staff," with no separate allowlist table. Instead: clients hit a server-side Edge Function that verifies a hashed one-time passcode using the service_role key and issues its own short-lived session token; client data reads go through a `SECURITY DEFINER` function, never a direct RLS policy. The tables `clients` and `client_otp_codes` intentionally have **no** RLS policy granting anon/authenticated access — `client_otp_codes` specifically is meant to be reachable only via a direct Postgres connection from an Edge Function, never through the Data API/PostgREST. If a future policy grants either table `to anon` or `to authenticated`, that's very likely a mistake reintroducing the thing this decision avoided.
+- **Client session tokens travel in a custom `x-client-session` header, not `Authorization`.** This isn't stylistic — `Authorization` is already consumed by Supabase's own platform-level JWT check (against the publishable/anon key) before your function body even runs, so putting a client session token there collides with that check. Any new Edge Function that needs to authenticate a client session (as opposed to a real Supabase Auth user) should follow the same `x-client-session` convention.
+- **This project has its own dedicated Supabase project, deliberately separate from the studio's other product (`perfect-stranger`).** Reusing that project was considered and rejected specifically to avoid mixing two products' `auth.users`, email templates, and redirect-URL allowlists. If you're setting up local/dev auth, make sure you're pointed at starter-culture's own project, not another studio property's.
+- **`docs/PRODUCT.md` requirements have a required shape.** Because an external tool (Devkeep) diffs requirements to regenerate derived docs (test plans, user manuals), each requirement must be a numbered item under `## Requirements`, stated as a present-tense rule, with any dates/history/past-approaches/bugs-that-forced-the-current-shape moved into a `**History.**`-marked block attached to that same item (or to whatever heading it explains) — never collected into one end-of-file changelog, and never blended into the rule's prose. If you edit `PRODUCT.md`, follow this format or you'll silently break Devkeep's doc generation.
 
-## Where to start
+## Gotchas — things that look wrong but aren't
 
-1. Read `docs/PRODUCT.md` first — it's the maintained source of truth for what this site/studio is and why, and will orient you faster than the code will.
-2. Open `src/pages/index.astro` alongside `src/components/Header.astro` and `Footer.astro` to see how the homepage composes shared chrome, then skim `about.astro` and `clients.astro` to see the footer-linked page pattern in practice.
-3. Read `src/styles/site.css` to understand the shared design tokens before touching any page-specific `<style>` block.
-4. Read `.github/workflows/pages-deploy.yml` to understand the release-gated deploy flow — try tracing what happens from `release: published` to the live custom domain.
-5. Skim the other `docs/*.md` files (`ONBOARDING.md`, `TEST_PLAN.md`, `USER_MANUAL.md`, `VISUALIZER.md`) for any additional project-specific conventions not captured in the decisions above.
+- Underscore-prefixed pages (`_about.astro`, `_clients.astro`) failing to appear in a build or a route list is correct behavior, not a bug.
+- The site not updating after you merge to `main` is expected — check whether a release was actually cut.
+- Finding client-related tables with seemingly no read access from the API is intentional lockdown, not a missing policy someone forgot to write.
+- A client-session token that doesn't work when sent as a Bearer token in `Authorization` is expected — it belongs in `x-client-session`.
+- The Login UI (Client ID/passcode, email/magic-link) may exist as a design/UI preview without a working backend yet — the decisions above describe the *intended* backend architecture, which is not confirmed here to be fully built. Don't assume the Edge Functions, tables, or Supabase project described exist and are wired up until you've checked.
+
+## Known dead ends this project already tried and moved past
+
+Worth knowing so you don't retread them, but not something to imitate:
+- A single email/password login form ("coming soon") — replaced by the two-flow passwordless design.
+- Client Login via Supabase's built-in email-OTP with a lookup step in front — replaced by the custom Edge-Function-verified passcode + session-token design, to preserve the "authenticated = staff" RLS simplification.
+- Deploying straight from `main` HEAD — replaced by release-gated deploys.
+- A flat, hand-rolled `index.html` with no build step — replaced by Astro.
+- Duplicating header/footer/CSS across pages — replaced by shared `Header.astro`/`Footer.astro`/`site.css` once a second and third page (`about`, `clients`) were added.
+
+## From clean checkout to a working change
+
+The docs available don't spell out install/dev/test commands explicitly, so treat the following as the shape of the workflow, confirmed against `package.json`/config files rather than invented:
+- It's a standard Astro project (`astro.config.mjs`, `tsconfig.json`, `package.json` with no framework dependencies beyond Astro) — expect the usual `npm install`, `npm run dev`, `npm run build` Astro commands to apply.
+- To change the live homepage: edit `src/pages/index.astro`, using `Header`/`Footer` and `site.css` rather than inlining new copies.
+- To bring `_about.astro` or `_clients.astro` closer to live, you'll eventually drop the underscore and add them to header/footer nav — but confirm first whether the backend they depend on (auth, Supabase) is actually ready; these were built as wireframes ahead of that work.
+- To actually publish a change to the live site: merge to `main`, then cut a GitHub Release (tag matching `v*`) — that release-published event is what triggers `pages-deploy.yml`.
+- If your change touches `docs/PRODUCT.md`, follow the numbered-requirement + `**History.**` convention so Devkeep's derived docs stay in sync.
+
+## What's not covered here
+
+There's no confirmed information in the source material about local test tooling/CI checks beyond the deploy and Devlore workflows, no confirmed contents of `docs/ONBOARDING.md`, `TEST_PLAN.md`, `USER_MANUAL.md`, or `VISUALIZER.md` (names only, contents unseen), and no confirmation of whether the Client/Company Login backend (Edge Functions, Supabase tables) has actually been implemented versus only designed. Check those directly before assuming behavior either way.
