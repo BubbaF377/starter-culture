@@ -32,7 +32,9 @@ const {
       </svg>
     </a>
     <nav>
-      {links.map((link) => <a href={link.href}>{link.label}</a>)}
+      {links.map((link) => (
+        <a href={link.href} class={link.href.startsWith('#') ? 'nav-section' : undefined}>{link.label}</a>
+      ))}
       <details class="login-dropdown">
         <summary>Login</summary>
         <div class="login-menu">

@@ -128,7 +128,9 @@ import '../styles/site.css';
 <style>
   /* Hero */
   .hero {
-    padding: 96px 0 80px;
+    /* padding-block, not padding: the hero is also `.wrap`, which supplies
+       the side padding. */
+    padding-block: 96px 80px;
     text-align: center;
   }
 
@@ -306,6 +308,7 @@ import '../styles/site.css';
   @media (max-width: 680px) {
     .about-grid { grid-template-columns: 1fr; gap: 32px; }
     .product-card { flex-direction: column; padding: 28px; }
-    .hero { padding: 64px 0 56px; }
+    .hero { padding-block: 64px 56px; }
+    .hero-brand { flex-direction: column; gap: 14px; }
   }
 </style>

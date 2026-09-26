@@ -108,8 +108,8 @@ const findings = [
       <span class="eyebrow">Alpha program — open now</span>
       <div class="hero-textblock">
         <div class="hero-brackets" aria-hidden="true">
-          <svg viewBox="0 0 40 140"><path d="M32,10 L8,70 L32,130" /></svg>
-          <svg viewBox="0 0 40 140"><path d="M8,10 L32,70 L8,130" /></svg>
+          <svg viewBox="0 0 40 140" preserveAspectRatio="none"><path d="M32,10 L8,70 L32,130" /></svg>
+          <svg viewBox="0 0 40 140" preserveAspectRatio="none"><path d="M8,10 L32,70 L8,130" /></svg>
         </div>
         <h1>Devkeep</h1>
         <p class="tagline">Your code is your kingdom. Every kingdom needs a keep.</p>
@@ -191,6 +191,15 @@ const findings = [
               <text x="380" y="248" text-anchor="middle" fill="var(--brown-soft)" font-size="13">numbered requirements · dated decisions · one hash each</text>
             </g>
           </svg>
+          <div class="diagram-list" aria-hidden="true">
+            <div class="dl-doc"><span>docs/</span>PRODUCT.md</div>
+            <ul>
+              <li><strong>Scribe</strong> regenerates only what changed</li>
+              <li><strong>Ward</strong> checks new code against the record</li>
+              <li><strong>Judge</strong> audits the whole repo against it, fresh</li>
+            </ul>
+            <p class="dl-note">numbered requirements · dated decisions · one hash each</p>
+          </div>
           <figcaption>A change to requirement #24 is a change one file makes — and every tool downstream sees it the same way.</figcaption>
         </figure>
       </div>
@@ -314,7 +323,9 @@ const findings = [
 
   /* Hero -- same scale and hierarchy as the homepage hero */
   .hero {
-    padding: 96px 0 80px;
+    /* padding-block, not padding: the hero is also `.wrap`, which supplies
+       the side padding. */
+    padding-block: 96px 80px;
     text-align: center;
   }
 
@@ -538,6 +549,71 @@ const findings = [
     paint-order: stroke;
   }
 
+  .diagram-list {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dl-doc {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--terracotta);
+    background: var(--paper);
+    border: 1.6px solid var(--terracotta);
+    border-radius: 12px;
+    padding: 10px 20px;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .dl-doc span { display: block; color: var(--brown); }
+
+  .diagram-list ul {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 18px 0 0;
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* The connector: one line from the doc down behind the keeper cards */
+  .diagram-list ul::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 20px;
+    border-left: 1.6px solid var(--line-strong);
+  }
+
+  .diagram-list li {
+    position: relative;
+    background: var(--cream);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--brown-soft);
+    text-align: center;
+  }
+
+  .diagram-list li strong {
+    display: block;
+    color: var(--brown);
+  }
+
+  .dl-note {
+    margin: 16px 0 0;
+    font-size: 13px;
+    color: var(--brown-soft);
+    text-align: center;
+  }
+
   .diagram figcaption {
     margin-top: 12px;
     text-align: center;
@@ -661,9 +737,19 @@ const findings = [
   }
 
   @media (max-width: 680px) {
-    .hero { padding: 64px 0 56px; }
-    .hero-brackets { opacity: 0.25; }
-    .hero-brackets svg { max-height: 220px; }
+    .hero { padding-block: 64px 56px; }
+
+    /* No room beside the text on a phone, so the text block makes room
+       inside the brackets, and the brackets become thin full-height strokes. */
+    .hero-textblock { padding-inline: 30px; }
+    .hero-brackets { inset: -24px 0; }
+    .hero-brackets svg { width: 18px; height: 100%; max-height: none; }
+    .hero-brackets path { stroke-width: 2.5px; vector-effect: non-scaling-stroke; }
+
+    /* The SVG diagram's text is unreadable at phone width; show the same
+       content as a stacked list instead. */
+    .diagram svg { display: none; }
+    .diagram-list { display: flex; }
     .card-grid.two,
     .card-grid.three,
     .cols { grid-template-columns: 1fr; }

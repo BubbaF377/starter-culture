@@ -49,6 +49,7 @@ import '../styles/site.css';
       <h2>Clients</h2>
       <p id="list-error" class="form-error" hidden></p>
       <p id="list-empty" class="sub" hidden>No clients yet.</p>
+      <div class="table-scroll">
       <table id="clients-table" hidden>
         <thead>
           <tr>
@@ -60,6 +61,7 @@ import '../styles/site.css';
         </thead>
         <tbody id="clients-tbody"></tbody>
       </table>
+      </div>
     </section>
   </main>
 
@@ -236,6 +238,36 @@ import '../styles/site.css';
     font-weight: 500;
     font-size: 28px;
     margin: 0 0 4px;
+  }
+
+  .admin-header {
+    gap: 16px;
+  }
+
+  /* site.css only styles .link-btn inside .login-card */
+  .admin-header .link-btn {
+    flex-shrink: 0;
+    margin-top: 8px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--brown-soft);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .admin-header .link-btn:hover { color: var(--terracotta); }
+
+  /* The 4-column client list scrolls sideways on phones instead of
+     squashing or overflowing the card. */
+  .table-scroll { overflow-x: auto; }
+  .table-scroll table { min-width: 460px; }
+
+  @media (max-width: 680px) {
+    .admin-main { padding: 32px 20px; }
+    .admin-card { padding: 22px; }
   }
 
   .admin-header .sub {

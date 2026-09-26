@@ -50,7 +50,9 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0;
+  gap: 16px;
+  /* padding-block, not padding: `.wrap` supplies the side padding. */
+  padding-block: 16px;
 }
 
 .brand {
@@ -405,6 +407,19 @@ footer .login-menu {
 }
 
 @media (max-width: 680px) {
-  nav { display: none; }
+  /* Keep the nav (and its Login menu) on phones, just tighter. */
+  nav { gap: 18px; }
+  nav a, .login-dropdown summary { font-size: 14px; }
   section { padding: 56px 0; }
+
+  /* The footer wraps on phones, putting Login at the left edge -- open its
+     menu rightward so it stays on-screen. */
+  footer .login-menu { right: auto; left: 0; }
+}
+
+@media (max-width: 480px) {
+  /* In-page section links (homepage) don't fit beside the logo; the
+     sections are a scroll away, and Login stays. */
+  nav .nav-section { display: none; }
+  .wrap { padding-inline: 20px; }
 }
