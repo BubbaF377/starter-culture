@@ -31,7 +31,6 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:image" content={new URL('/assets/starter-culture-avatar.svg', Astro.site)} />
     <meta property="og:url" content={canonicalURL} />
     <meta name="twitter:card" content="summary" />
-    <slot name="head" />
   </head>
   <body>
     <slot />

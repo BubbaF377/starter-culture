@@ -1,555 +1,672 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/site.css';
 
-// Devkeep has its own brand (navy/gold, Fraunces/IBM Plex, light + dark), so
-// this page deliberately doesn't import site.css or the site Header/Footer --
-// see docs/PRODUCT.md item 6. Its styles below are global but only ship on
-// this page.
+// Devkeep alpha-program page, in the site's own design system (see
+// docs/PRODUCT.md item 6). The navy/gold badges are Devkeep's product marks,
+// kept as-is the way the homepage's Devkeep card shows them.
+const badges: Record<string, string> = {
+  "Scribe": "<svg viewBox=\"0 0 140 140\"><rect width=\"140\" height=\"140\" rx=\"28\" fill=\"#23264D\"/><path d=\"M48,30.9 L24,70 L48,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M92,30.9 L116,70 L92,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M58,107 L82,107 L76,97 L73,95 L76,92 L76,91 L64,91 L64,92 L67,95 L64,97 Z\" fill=\"#D9A441\"/><ellipse cx=\"70\" cy=\"91\" rx=\"6\" ry=\"1.6\" fill=\"#23264D\"/><path d=\"M70,34 Q78,41 78,51 Q78,62 73,70 Q71,72 70,75 Q69,72 67,70 Q62,62 62,51 Q62,41 70,34 Z\" fill=\"#D9A441\"/><rect x=\"68.5\" y=\"75\" width=\"3\" height=\"16\" fill=\"#D9A441\"/></svg>",
+  "Crypt": "<svg viewBox=\"0 0 140 140\"><rect width=\"140\" height=\"140\" rx=\"28\" fill=\"#23264D\"/><path d=\"M48,30.9 L24,70 L48,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M92,30.9 L116,70 L92,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"70\" cy=\"46.85\" r=\"12.86\" fill=\"#D9A441\"/><circle cx=\"70\" cy=\"46.85\" r=\"6.43\" fill=\"#23264D\"/><rect x=\"65.57\" y=\"54.57\" width=\"8.87\" height=\"51.44\" fill=\"#D9A441\"/><rect x=\"71.48\" y=\"88.00\" width=\"8.87\" height=\"3.86\" fill=\"#D9A441\"/><rect x=\"71.48\" y=\"95.08\" width=\"11.82\" height=\"3.86\" fill=\"#D9A441\"/><rect x=\"71.48\" y=\"102.15\" width=\"8.87\" height=\"3.86\" fill=\"#D9A441\"/></svg>",
+  "Scout": "<svg viewBox=\"0 0 140 140\"><rect width=\"140\" height=\"140\" rx=\"28\" fill=\"#23264D\"/><path d=\"M48,30.9 L24,70 L48,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M92,30.9 L116,70 L92,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"70\" cy=\"37\" r=\"3.5\" fill=\"#D9A441\"/><rect x=\"67\" y=\"40\" width=\"6\" height=\"64\" fill=\"#D9A441\"/><path d=\"M73,49 L84,49 L90,55 L84,61 L73,61 Z\" fill=\"#D9A441\"/><path d=\"M67,68 L56,68 L50,74 L56,80 L67,80 Z\" fill=\"#D9A441\"/><rect x=\"64\" y=\"103\" width=\"12\" height=\"3\" fill=\"#D9A441\"/></svg>",
+  "Seer": "<svg viewBox=\"0 0 140 140\"><rect width=\"140\" height=\"140\" rx=\"28\" fill=\"#23264D\"/><path d=\"M48,30.9 L24,70 L48,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M92,30.9 L116,70 L92,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><g stroke=\"#D9A441\" stroke-linecap=\"butt\"><g stroke-width=\"6\"><line x1=\"70\" y1=\"59.20\" x2=\"70\" y2=\"34.00\"/><line x1=\"70\" y1=\"80.80\" x2=\"70\" y2=\"106.00\"/></g><g stroke-width=\"3.6\"><line x1=\"63.10\" y1=\"59.20\" x2=\"57.58\" y2=\"50.80\"/><line x1=\"76.90\" y1=\"59.20\" x2=\"82.42\" y2=\"50.80\"/><line x1=\"57.58\" y1=\"62.80\" x2=\"49.30\" y2=\"55.60\"/><line x1=\"82.42\" y1=\"62.80\" x2=\"90.70\" y2=\"55.60\"/><line x1=\"63.10\" y1=\"80.80\" x2=\"57.58\" y2=\"89.20\"/><line x1=\"76.90\" y1=\"80.80\" x2=\"82.42\" y2=\"89.20\"/><line x1=\"57.58\" y1=\"77.20\" x2=\"49.30\" y2=\"84.40\"/><line x1=\"82.42\" y1=\"77.20\" x2=\"90.70\" y2=\"84.40\"/></g></g><path d=\"M50,70 Q70,40 90,70 Q70,100 50,70 Z\" fill=\"#23264D\" stroke=\"#D9A441\" stroke-width=\"3\"/><circle cx=\"70\" cy=\"70\" r=\"7\" fill=\"#D9A441\"/><circle cx=\"70\" cy=\"70\" r=\"3\" fill=\"#23264D\"/></svg>",
+  "Judge": "<svg viewBox=\"0 0 140 140\"><rect width=\"140\" height=\"140\" rx=\"28\" fill=\"#23264D\"/><path d=\"M48,30.9 L24,70 L48,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M92,30.9 L116,70 L92,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"70\" cy=\"35.5\" r=\"3.5\" fill=\"#D9A441\"/><rect x=\"68.5\" y=\"39\" width=\"3\" height=\"5\" fill=\"#D9A441\"/><rect x=\"55\" y=\"44\" width=\"30\" height=\"3\" rx=\"1\" fill=\"#D9A441\"/><rect x=\"68\" y=\"47\" width=\"4\" height=\"48\" fill=\"#D9A441\"/><path d=\"M68,95 L72,95 L85,101 L55,101 Z\" fill=\"#D9A441\"/><rect x=\"55\" y=\"101\" width=\"30\" height=\"3\" rx=\"1\" fill=\"#D9A441\"/><line x1=\"55\" y1=\"47\" x2=\"49\" y2=\"60\" stroke=\"#D9A441\" stroke-width=\"2\" stroke-linecap=\"round\"/><line x1=\"55\" y1=\"47\" x2=\"61\" y2=\"60\" stroke=\"#D9A441\" stroke-width=\"2\" stroke-linecap=\"round\"/><path d=\"M48,60 Q55,68 62,60\" fill=\"none\" stroke=\"#D9A441\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><line x1=\"85\" y1=\"47\" x2=\"79\" y2=\"60\" stroke=\"#D9A441\" stroke-width=\"2\" stroke-linecap=\"round\"/><line x1=\"85\" y1=\"47\" x2=\"91\" y2=\"60\" stroke=\"#D9A441\" stroke-width=\"2\" stroke-linecap=\"round\"/><path d=\"M78,60 Q85,68 92,60\" fill=\"none\" stroke=\"#D9A441\" stroke-width=\"2.5\" stroke-linecap=\"round\"/></svg>",
+  "Ward": "<svg viewBox=\"0 0 140 140\"><rect width=\"140\" height=\"140\" rx=\"28\" fill=\"#23264D\"/><path d=\"M48,30.9 L24,70 L48,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M92,30.9 L116,70 L92,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M70,32.44 L77.20,54.98 L74.32,75.01 L65.68,75.01 L62.80,54.98 Z\" fill=\"#D9A441\"/><line x1=\"70\" y1=\"37.45\" x2=\"70\" y2=\"72.50\" stroke=\"#23264D\" stroke-width=\"1.5\"/><rect x=\"58.48\" y=\"75.01\" width=\"23.04\" height=\"4.38\" rx=\"1.2\" fill=\"#D9A441\"/><rect x=\"65.68\" y=\"79.39\" width=\"8.64\" height=\"16.28\" fill=\"#D9A441\"/><rect x=\"65.68\" y=\"87.53\" width=\"8.64\" height=\"1.63\" fill=\"#23264D\"/><circle cx=\"70\" cy=\"98.80\" r=\"5.63\" fill=\"#D9A441\"/></svg>",
+  "Devkeep": "<svg viewBox=\"0 0 140 140\"><rect width=\"140\" height=\"140\" rx=\"28\" fill=\"#23264D\"/><path d=\"M48,30.9 L24,70 L48,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M92,30.9 L116,70 L92,109.1\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"60.34\" y=\"50.80\" width=\"19.32\" height=\"55.20\" fill=\"#D9A441\"/><rect x=\"60.34\" y=\"38.80\" width=\"4.14\" height=\"12.00\" fill=\"#D9A441\"/><rect x=\"67.93\" y=\"34.00\" width=\"4.14\" height=\"16.80\" fill=\"#D9A441\"/><rect x=\"75.52\" y=\"38.80\" width=\"4.14\" height=\"12.00\" fill=\"#D9A441\"/><rect x=\"67.93\" y=\"62.80\" width=\"4.14\" height=\"7.20\" fill=\"#23264D\"/></svg>"
+};
+
+const keepers = [
+  {
+    name: 'Scribe',
+    tag: 'Every decision gets a record.',
+    desc: 'Generates and maintains living documentation — architecture notes, decisions, requirements, release notes, and a QA test plan. A chat interface for asking your own codebase questions. Regenerates only what actually changed.',
+  },
+  {
+    name: 'Crypt',
+    tag: 'Every system has its secrets.',
+    desc: 'Team secrets, APIs, URLs — all vault-backed and KMS-anchored, with real per-project access control. Not a shared .env file, not a random spreadsheet.',
+  },
+  {
+    name: 'Scout',
+    tag: 'Daily news from beyond the walls.',
+    desc: 'A daily technical-reading digest scoped to your own stack — the one module that looks outward at the industry instead of inward at your repos. A chat interface to tune the results to your interests.',
+  },
+  {
+    name: 'Seer',
+    tag: 'The view from the throne.',
+    desc: 'Team access management and a GitHub control board for account admins and owners. Keep an eye on access, releases, commits, and spend.',
+  },
+  {
+    name: 'Judge',
+    tag: 'The clearest view is from the outside in.',
+    desc: 'An unattached outside auditor with zero prior context — explores a whole repo cold and produces a real, evidenced report, on demand.',
+  },
+  {
+    name: 'Ward',
+    tag: 'Nothing gets in unwatched.',
+    desc: 'An ensemble of independent AI reviewers — each with its own mandate — evaluates every pull request before it merges, citing your own product doc while doing it.',
+  },
+];
+
+const problems = [
+  {
+    label: 'Docs',
+    title: "Your docs don't know when your code changes.",
+    body: 'Nothing connects the wiki to the repo — so the page and the codebase drift apart, and nobody finds out until someone trusts the wrong one.',
+  },
+  {
+    label: 'Secrets',
+    title: "Your secrets don't know who's still on the team.",
+    body: 'An API key set up in a spreadsheet three projects ago outlives the person who made it, because nothing connects your secrets to your roster.',
+  },
+  {
+    label: 'Review',
+    title: 'Your reviewer never saw the product doc.',
+    body: 'A pull request can pass every check and still undo a decision made two months ago, because the review tool and the decision log have never talked.',
+  },
+  {
+    label: 'Blind spots',
+    title: 'Nothing independent ever looks at it twice.',
+    body: 'The tool that wrote the code and the tool that reviewed it share the same context — and nothing in the stack exists to check either one from the outside.',
+  },
+];
+
+const findings = [
+  {
+    verdict: 'Found & fixed',
+    tone: 'warn',
+    title: 'A vault write path with no real check on the destination',
+    body: "Ward's security lens, reviewing a sibling module, caught a route that let any signed-in caller name which vault a write landed in — latent while one person runs one vault, live the moment it's shared. Fixed before it shipped to more than one person.",
+  },
+  {
+    verdict: 'Sound with concerns',
+    tone: 'good',
+    title: "Judge's first cold read of an unfamiliar codebase",
+    body: 'No prior context, no hand-holding — pointed at a repo it had never seen and asked to audit it the way an outside consultant would. It came back with 33 real, evidenced findings and an honest verdict, not a rubber stamp.',
+  },
+  {
+    verdict: 'Found in the wild',
+    tone: 'warn',
+    title: 'A doc-parsing bug that made a module invisible to its own tools',
+    body: 'A stray mention of a heading inside a sentence was enough to make the requirements parser stop at the wrong place — silently, and in the direction that looked like good news. Found through real use, not a spec review.',
+  },
+];
 ---
 
 <Layout
   title="Devkeep Alpha Program — StarterCulture"
   description="Devkeep: one shell, one login, six purpose-built developer tools — all reading the same living product doc. Now looking for alpha testers."
 >
-  <Fragment slot="head">
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
-  </Fragment>
+  <Header links={[{ href: '/', label: 'Home' }]} />
 
-<!-- ============================================================ HERO -->
-<section class="hero">
-  <div class="hero-inner wrap">
-    <div class="badge lg" aria-hidden="true">
-      <svg viewBox="0 0 140 140" role="img"><title>Devkeep</title>
-        <rect width="140" height="140" rx="28" fill="#23264D"/>
-        <path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-        <rect x="60.34" y="50.80" width="19.32" height="55.20" fill="#D9A441"/>
-        <rect x="60.34" y="38.80" width="4.14" height="12.00" fill="#D9A441"/>
-        <rect x="67.93" y="34.00" width="4.14" height="16.80" fill="#D9A441"/>
-        <rect x="75.52" y="38.80" width="4.14" height="12.00" fill="#D9A441"/>
-        <rect x="67.93" y="62.80" width="4.14" height="7.20" fill="#23264D"/>
-      </svg>
-    </div>
-    <div class="eyebrow" style="justify-content:center;">alpha program — open now</div>
-    <div class="hero-textblock">
-      <div class="hero-brackets" aria-hidden="true">
-        <svg viewBox="0 0 40 140"><path d="M32,10 L8,70 L32,130" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <svg viewBox="0 0 40 140"><path d="M8,10 L32,70 L8,130" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="hero-textblock-inner">
+  <main class="devkeep">
+
+    <section class="hero wrap">
+      <div class="hero-badge" aria-hidden="true" set:html={badges.Devkeep} />
+      <span class="eyebrow">Alpha program — open now</span>
+      <div class="hero-textblock">
+        <div class="hero-brackets" aria-hidden="true">
+          <svg viewBox="0 0 40 140"><path d="M32,10 L8,70 L32,130" /></svg>
+          <svg viewBox="0 0 40 140"><path d="M8,10 L32,70 L8,130" /></svg>
+        </div>
         <h1>Devkeep</h1>
         <p class="tagline">Your code is your kingdom. Every kingdom needs a keep.</p>
-        <p class="lede hero-lede">One shell, one login, six purpose-built tools — and a living document at the center that every one of them actually reads. We're looking for a few developers and QAs to put it through its paces before anyone else sees it.</p>
+        <p class="lede">One shell, one login, six purpose-built tools — and a living document at the center that every one of them actually reads. We're looking for a few developers and QAs to put it through its paces before anyone else sees it.</p>
       </div>
-    </div>
-    <p class="cue">↓ scroll for the walkthrough</p>
-  </div>
-</section>
+      <p class="cue">↓ Scroll for the walkthrough</p>
+    </section>
 
-<!-- ============================================================ PROBLEM -->
-<section>
-  <div class="wrap">
-    <div class="eyebrow">the problem</div>
-    <h2>It's not a missing tool. It's tools that don't talk to each other.</h2>
-    <p class="lede narrow" style="margin-top:18px; color:var(--ink-soft); font-size:16px;">
-      Most of what slows a team down isn't any single broken thing — it's the seams between tools that weren't designed to know about each other.
-    </p>
-    <div class="pain-grid">
-      <div class="pain-card">
-        <div class="k">DOCS</div>
-        <h3>Your docs don't know when your code changes.</h3>
-        <p>Nothing connects the wiki to the repo — so the page and the codebase drift apart, and nobody finds out until someone trusts the wrong one.</p>
-      </div>
-      <div class="pain-card">
-        <div class="k">SECRETS</div>
-        <h3>Your secrets don't know who's still on the team.</h3>
-        <p>An API key set up in a spreadsheet three projects ago outlives the person who made it, because nothing connects your secrets to your roster.</p>
-      </div>
-      <div class="pain-card">
-        <div class="k">REVIEW</div>
-        <h3>Your reviewer never saw the product doc.</h3>
-        <p>A pull request can pass every check and still undo a decision made two months ago, because the review tool and the decision log have never talked.</p>
-      </div>
-      <div class="pain-card">
-        <div class="k">BLIND SPOTS</div>
-        <h3>Nothing independent ever looks at it twice.</h3>
-        <p>The tool that wrote the code and the tool that reviewed it share the same context — and nothing in the stack exists to check either one from the outside.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================ IDEA -->
-<section class="panel">
-  <div class="wrap">
-    <div class="eyebrow">the idea</div>
-    <h2>One keep. Six keepers. One set of keys.</h2>
-    <p class="lede narrow" style="margin-top:18px; color:var(--ink-soft); font-size:16px;">
-      Devkeep is one interface you open, not six tabs you juggle. Sign in once, link a project once, and call on whichever keeper you need — the way you'd call on any specialist on a team you already trust.
-    </p>
-    <div class="rail-mock" aria-hidden="true">
-      <div class="rail-item">
-        <div class="badge sm"><svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M58,107 L82,107 L76,97 L73,95 L76,92 L76,91 L64,91 L64,92 L67,95 L64,97 Z" fill="#D9A441"/><ellipse cx="70" cy="91" rx="6" ry="1.6" fill="#23264D"/><path d="M70,34 Q78,41 78,51 Q78,62 73,70 Q71,72 70,75 Q69,72 67,70 Q62,62 62,51 Q62,41 70,34 Z" fill="#D9A441"/><rect x="68.5" y="75" width="3" height="16" fill="#D9A441"/></svg></div>
-        <span>Scribe</span>
-      </div>
-      <div class="rail-item">
-        <div class="badge sm"><svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="70" cy="46.85" r="12.86" fill="#D9A441"/><circle cx="70" cy="46.85" r="6.43" fill="#23264D"/><rect x="65.57" y="54.57" width="8.87" height="51.44" fill="#D9A441"/></svg></div>
-        <span>Crypt</span>
-      </div>
-      <div class="rail-item">
-        <div class="badge sm"><svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="70" cy="37" r="3.5" fill="#D9A441"/><rect x="67" y="40" width="6" height="64" fill="#D9A441"/><path d="M73,49 L84,49 L90,55 L84,61 L73,61 Z" fill="#D9A441"/><path d="M67,68 L56,68 L50,74 L56,80 L67,80 Z" fill="#D9A441"/><rect x="64" y="103" width="12" height="3" fill="#D9A441"/></svg></div>
-        <span>Scout</span>
-      </div>
-      <div class="rail-item">
-        <div class="badge sm"><svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><g stroke="#D9A441" stroke-linecap="butt"><g stroke-width="6"><line x1="70" y1="59.20" x2="70" y2="34.00"/><line x1="70" y1="80.80" x2="70" y2="106.00"/></g><g stroke-width="3.6"><line x1="63.10" y1="59.20" x2="57.58" y2="50.80"/><line x1="76.90" y1="59.20" x2="82.42" y2="50.80"/><line x1="57.58" y1="62.80" x2="49.30" y2="55.60"/><line x1="82.42" y1="62.80" x2="90.70" y2="55.60"/><line x1="63.10" y1="80.80" x2="57.58" y2="89.20"/><line x1="76.90" y1="80.80" x2="82.42" y2="89.20"/><line x1="57.58" y1="77.20" x2="49.30" y2="84.40"/><line x1="82.42" y1="77.20" x2="90.70" y2="84.40"/></g></g><path d="M50,70 Q70,40 90,70 Q70,100 50,70 Z" fill="#23264D" stroke="#D9A441" stroke-width="3"/><circle cx="70" cy="70" r="7" fill="#D9A441"/><circle cx="70" cy="70" r="3" fill="#23264D"/></svg></div>
-        <span>Seer</span>
-      </div>
-      <div class="rail-item">
-        <div class="badge sm"><svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="70" cy="35.5" r="3.5" fill="#D9A441"/><rect x="68.5" y="39" width="3" height="5" fill="#D9A441"/><rect x="55" y="44" width="30" height="3" rx="1" fill="#D9A441"/><rect x="68" y="47" width="4" height="48" fill="#D9A441"/><path d="M68,95 L72,95 L85,101 L55,101 Z" fill="#D9A441"/><rect x="55" y="101" width="30" height="3" rx="1" fill="#D9A441"/><line x1="55" y1="47" x2="49" y2="60" stroke="#D9A441" stroke-width="2" stroke-linecap="round"/><line x1="55" y1="47" x2="61" y2="60" stroke="#D9A441" stroke-width="2" stroke-linecap="round"/><path d="M48,60 Q55,68 62,60" fill="none" stroke="#D9A441" stroke-width="2.5" stroke-linecap="round"/><line x1="85" y1="47" x2="79" y2="60" stroke="#D9A441" stroke-width="2" stroke-linecap="round"/><line x1="85" y1="47" x2="91" y2="60" stroke="#D9A441" stroke-width="2" stroke-linecap="round"/><path d="M78,60 Q85,68 92,60" fill="none" stroke="#D9A441" stroke-width="2.5" stroke-linecap="round"/></svg></div>
-        <span>Judge</span>
-      </div>
-      <div class="rail-item">
-        <div class="badge sm"><svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M70,32.44 L77.20,54.98 L74.32,75.01 L65.68,75.01 L62.80,54.98 Z" fill="#D9A441"/><line x1="70" y1="37.45" x2="70" y2="72.50" stroke="#23264D" stroke-width="1.5"/><rect x="58.48" y="75.01" width="23.04" height="4.38" rx="1.2" fill="#D9A441"/><rect x="65.68" y="79.39" width="8.64" height="16.28" fill="#D9A441"/><rect x="65.68" y="87.53" width="8.64" height="1.63" fill="#23264D"/><circle cx="70" cy="98.80" r="5.63" fill="#D9A441"/></svg></div>
-        <span>Ward</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================ DIFFERENTIATOR -->
-<section>
-  <div class="wrap">
-    <div class="eyebrow">what makes it different</div>
-    <h2>Every tool reads the same page.</h2>
-    <p class="lede narrow" style="margin-top:18px; color:var(--ink-soft); font-size:16px;">
-      At the center of every linked project is one file: <code style="font-family:var(--font-mono); background:var(--bg-panel-2); padding:2px 6px; border-radius:5px;">docs/PRODUCT.md</code> — a living record of numbered requirements and dated decisions, written by whomever owns the project. It's the thing Devkeep is built to read, and that Devkeep actively maintains.
-    </p>
-    <div class="diagram">
-      <figure>
-        <svg class="diagram-fig" viewBox="0 0 760 300" role="img" aria-label="docs/PRODUCT.md feeding Scribe, Ward, and Judge">
-          <g font-family="IBM Plex Mono, monospace" font-size="13">
-            <!-- center doc -->
-            <rect x="300" y="130" width="160" height="66" rx="10" fill="var(--bg-panel)" stroke="var(--accent)" stroke-width="1.6"/>
-            <text x="380" y="158" text-anchor="middle" fill="var(--ink)" font-weight="600" font-size="13">docs/</text>
-            <text x="380" y="176" text-anchor="middle" fill="var(--accent)" font-weight="600" font-size="13">PRODUCT.md</text>
-
-            <!-- lines to three nodes -->
-            <path d="M340,130 C300,90 220,70 130,64" fill="none" stroke="var(--line)" stroke-width="1.6"/>
-            <path d="M380,130 L380,64" fill="none" stroke="var(--line)" stroke-width="1.6"/>
-            <path d="M420,130 C460,90 540,70 630,64" fill="none" stroke="var(--line)" stroke-width="1.6"/>
-
-            <!-- Scribe node -->
-            <rect x="50" y="18" width="160" height="46" rx="9" fill="var(--bg-panel-2)" stroke="var(--line)"/>
-            <text x="130" y="46" text-anchor="middle" fill="var(--ink)" font-weight="600">Scribe</text>
-            <text x="130" y="90" text-anchor="middle" fill="var(--ink-faint)">regenerates only</text>
-            <text x="130" y="106" text-anchor="middle" fill="var(--ink-faint)">what changed</text>
-
-            <!-- Ward node -->
-            <rect x="300" y="18" width="160" height="46" rx="9" fill="var(--bg-panel-2)" stroke="var(--line)"/>
-            <text x="380" y="46" text-anchor="middle" fill="var(--ink)" font-weight="600">Ward</text>
-            <text x="380" y="90" text-anchor="middle" fill="var(--ink-faint)">checks new code</text>
-            <text x="380" y="106" text-anchor="middle" fill="var(--ink-faint)">against the record</text>
-
-            <!-- Judge node -->
-            <rect x="550" y="18" width="160" height="46" rx="9" fill="var(--bg-panel-2)" stroke="var(--line)"/>
-            <text x="630" y="46" text-anchor="middle" fill="var(--ink)" font-weight="600">Judge</text>
-            <text x="630" y="90" text-anchor="middle" fill="var(--ink-faint)">audits the whole repo</text>
-            <text x="630" y="106" text-anchor="middle" fill="var(--ink-faint)">against it, fresh</text>
-
-            <!-- decorative brackets bottom -->
-            <text x="380" y="270" text-anchor="middle" fill="var(--ink-faint)" font-size="12">numbered requirements · dated decisions · one hash each</text>
-          </g>
-        </svg>
-        <figcaption>A change to requirement #24 is a change one file makes — and every tool downstream sees it the same way.</figcaption>
-      </figure>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================ MODULES -->
-<section class="panel">
-  <div class="wrap">
-    <div class="eyebrow">the six keepers</div>
-    <h2>Meet the keepers.</h2>
-    <div class="module-grid">
-
-      <div class="module-card">
-        <div class="top">
-          <div class="badge sm"><svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M58,107 L82,107 L76,97 L73,95 L76,92 L76,91 L64,91 L64,92 L67,95 L64,97 Z" fill="#D9A441"/><ellipse cx="70" cy="91" rx="6" ry="1.6" fill="#23264D"/><path d="M70,34 Q78,41 78,51 Q78,62 73,70 Q71,72 70,75 Q69,72 67,70 Q62,62 62,51 Q62,41 70,34 Z" fill="#D9A441"/><rect x="68.5" y="75" width="3" height="16" fill="#D9A441"/></svg></div>
-          <h3>Scribe</h3>
+    <section class="alt">
+      <div class="wrap">
+        <div class="section-header">
+          <span class="eyebrow">The problem</span>
+          <h2>It's not a missing tool. It's tools that don't talk to each other.</h2>
+          <p>Most of what slows a team down isn't any single broken thing — it's the seams between tools that weren't designed to know about each other.</p>
         </div>
-        <div class="tag">"Every decision gets a record."</div>
-        <p class="desc">Generates and maintains living documentation — architecture notes, decisions, requirements, release notes, and a QA test plan. A chat interface for asking your own codebase questions. Regenerates only what actually changed.</p>
-      </div>
-
-      <div class="module-card">
-        <div class="top">
-          <div class="badge sm"><svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="70" cy="46.85" r="12.86" fill="#D9A441"/><circle cx="70" cy="46.85" r="6.43" fill="#23264D"/><rect x="65.57" y="54.57" width="8.87" height="51.44" fill="#D9A441"/><rect x="71.48" y="88.00" width="8.87" height="3.86" fill="#D9A441"/><rect x="71.48" y="95.08" width="11.82" height="3.86" fill="#D9A441"/><rect x="71.48" y="102.15" width="8.87" height="3.86" fill="#D9A441"/></svg></div>
-          <h3>Crypt</h3>
+        <div class="card-grid two">
+          {problems.map((p) => (
+            <div class="card">
+              <div class="card-label">{p.label}</div>
+              <h3>{p.title}</h3>
+              <p>{p.body}</p>
+            </div>
+          ))}
         </div>
-        <div class="tag">"Every system has its secrets."</div>
-        <p class="desc">Team secrets, APIs, URLs — all vault-backed and KMS-anchored, with real per-project access control. Not a shared .env file, not a random spreadsheet.</p>
       </div>
+    </section>
 
-      <div class="module-card">
-        <div class="top">
-          <div class="badge sm"><svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="70" cy="37" r="3.5" fill="#D9A441"/><rect x="67" y="40" width="6" height="64" fill="#D9A441"/><path d="M73,49 L84,49 L90,55 L84,61 L73,61 Z" fill="#D9A441"/><path d="M67,68 L56,68 L50,74 L56,80 L67,80 Z" fill="#D9A441"/><rect x="64" y="103" width="12" height="3" fill="#D9A441"/></svg></div>
-          <h3>Scout</h3>
+    <section>
+      <div class="wrap">
+        <div class="section-header">
+          <span class="eyebrow">The idea</span>
+          <h2>One keep. Six keepers. One set of keys.</h2>
+          <p>Devkeep is one interface you open, not six tabs you juggle. Sign in once, link a project once, and call on whichever keeper you need — the way you'd call on any specialist on a team you already trust.</p>
         </div>
-        <div class="tag">"Daily news from beyond the walls."</div>
-        <p class="desc">A daily technical-reading digest scoped to your own stack — the one module that looks outward at the industry instead of inward at your repos. A chat interface to tune the results to your interests.</p>
-      </div>
-
-      <div class="module-card">
-        <div class="top">
-          <div class="badge sm"><svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><g stroke="#D9A441" stroke-linecap="butt"><g stroke-width="6"><line x1="70" y1="59.20" x2="70" y2="34.00"/><line x1="70" y1="80.80" x2="70" y2="106.00"/></g><g stroke-width="3.6"><line x1="63.10" y1="59.20" x2="57.58" y2="50.80"/><line x1="76.90" y1="59.20" x2="82.42" y2="50.80"/><line x1="57.58" y1="62.80" x2="49.30" y2="55.60"/><line x1="82.42" y1="62.80" x2="90.70" y2="55.60"/><line x1="63.10" y1="80.80" x2="57.58" y2="89.20"/><line x1="76.90" y1="80.80" x2="82.42" y2="89.20"/><line x1="57.58" y1="77.20" x2="49.30" y2="84.40"/><line x1="82.42" y1="77.20" x2="90.70" y2="84.40"/></g></g><path d="M50,70 Q70,40 90,70 Q70,100 50,70 Z" fill="#23264D" stroke="#D9A441" stroke-width="3"/><circle cx="70" cy="70" r="7" fill="#D9A441"/><circle cx="70" cy="70" r="3" fill="#23264D"/></svg></div>
-          <h3>Seer</h3>
+        <div class="rail" aria-hidden="true">
+          {keepers.map((k) => (
+            <div class="rail-item">
+              <div class="badge" set:html={badges[k.name]} />
+              <span>{k.name}</span>
+            </div>
+          ))}
         </div>
-        <div class="tag">"The view from the throne."</div>
-        <p class="desc">Team access management and a GitHub control board for account admins and owners. Keep an eye on access, releases, commits, and spend.</p>
       </div>
+    </section>
 
-      <div class="module-card">
-        <div class="top">
-          <div class="badge sm"><svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="70" cy="35.5" r="3.5" fill="#D9A441"/><rect x="68.5" y="39" width="3" height="5" fill="#D9A441"/><rect x="55" y="44" width="30" height="3" rx="1" fill="#D9A441"/><rect x="68" y="47" width="4" height="48" fill="#D9A441"/><path d="M68,95 L72,95 L85,101 L55,101 Z" fill="#D9A441"/><rect x="55" y="101" width="30" height="3" rx="1" fill="#D9A441"/><line x1="55" y1="47" x2="49" y2="60" stroke="#D9A441" stroke-width="2" stroke-linecap="round"/><line x1="55" y1="47" x2="61" y2="60" stroke="#D9A441" stroke-width="2" stroke-linecap="round"/><path d="M48,60 Q55,68 62,60" fill="none" stroke="#D9A441" stroke-width="2.5" stroke-linecap="round"/><line x1="85" y1="47" x2="79" y2="60" stroke="#D9A441" stroke-width="2" stroke-linecap="round"/><line x1="85" y1="47" x2="91" y2="60" stroke="#D9A441" stroke-width="2" stroke-linecap="round"/><path d="M78,60 Q85,68 92,60" fill="none" stroke="#D9A441" stroke-width="2.5" stroke-linecap="round"/></svg></div>
-          <h3>Judge</h3>
+    <section class="alt">
+      <div class="wrap">
+        <div class="section-header">
+          <span class="eyebrow">What makes it different</span>
+          <h2>Every tool reads the same page.</h2>
+          <p>At the center of every linked project is one file: <code>docs/PRODUCT.md</code> — a living record of numbered requirements and dated decisions, written by whomever owns the project. It's the thing Devkeep is built to read, and that Devkeep actively maintains.</p>
         </div>
-        <div class="tag">"The clearest view is from the outside in."</div>
-        <p class="desc">An unattached outside auditor with zero prior context — explores a whole repo cold and produces a real, evidenced report, on demand.</p>
-      </div>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 280" role="img" aria-label="docs/PRODUCT.md feeding Scribe, Ward, and Judge">
+            <g font-size="14">
+              <path d="M340,130 C300,90 220,70 130,64" fill="none" stroke="var(--line-strong)" stroke-width="1.6"/>
+              <path d="M380,130 L380,64" fill="none" stroke="var(--line-strong)" stroke-width="1.6"/>
+              <path d="M420,130 C460,90 540,70 630,64" fill="none" stroke="var(--line-strong)" stroke-width="1.6"/>
 
-      <div class="module-card">
-        <div class="top">
-          <div class="badge sm"><svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M70,32.44 L77.20,54.98 L74.32,75.01 L65.68,75.01 L62.80,54.98 Z" fill="#D9A441"/><line x1="70" y1="37.45" x2="70" y2="72.50" stroke="#23264D" stroke-width="1.5"/><rect x="58.48" y="75.01" width="23.04" height="4.38" rx="1.2" fill="#D9A441"/><rect x="65.68" y="79.39" width="8.64" height="16.28" fill="#D9A441"/><rect x="65.68" y="87.53" width="8.64" height="1.63" fill="#23264D"/><circle cx="70" cy="98.80" r="5.63" fill="#D9A441"/></svg></div>
-          <h3>Ward</h3>
+              <rect x="300" y="130" width="160" height="66" rx="12" fill="var(--paper)" stroke="var(--terracotta)" stroke-width="1.6"/>
+              <text x="380" y="158" text-anchor="middle" class="mono" fill="var(--brown)" font-weight="600">docs/</text>
+              <text x="380" y="177" text-anchor="middle" class="mono" fill="var(--terracotta)" font-weight="600">PRODUCT.md</text>
+
+              <rect x="50" y="18" width="160" height="46" rx="12" fill="var(--cream)" stroke="var(--line-strong)"/>
+              <text x="130" y="46" text-anchor="middle" fill="var(--brown)" font-weight="600">Scribe</text>
+              <text x="130" y="90" text-anchor="middle" class="halo" fill="var(--brown-soft)">regenerates only</text>
+              <text x="130" y="107" text-anchor="middle" class="halo" fill="var(--brown-soft)">what changed</text>
+
+              <rect x="300" y="18" width="160" height="46" rx="12" fill="var(--cream)" stroke="var(--line-strong)"/>
+              <text x="380" y="46" text-anchor="middle" fill="var(--brown)" font-weight="600">Ward</text>
+              <text x="380" y="90" text-anchor="middle" class="halo" fill="var(--brown-soft)">checks new code</text>
+              <text x="380" y="107" text-anchor="middle" class="halo" fill="var(--brown-soft)">against the record</text>
+
+              <rect x="550" y="18" width="160" height="46" rx="12" fill="var(--cream)" stroke="var(--line-strong)"/>
+              <text x="630" y="46" text-anchor="middle" fill="var(--brown)" font-weight="600">Judge</text>
+              <text x="630" y="90" text-anchor="middle" class="halo" fill="var(--brown-soft)">audits the whole repo</text>
+              <text x="630" y="107" text-anchor="middle" class="halo" fill="var(--brown-soft)">against it, fresh</text>
+
+              <text x="380" y="248" text-anchor="middle" fill="var(--brown-soft)" font-size="13">numbered requirements · dated decisions · one hash each</text>
+            </g>
+          </svg>
+          <figcaption>A change to requirement #24 is a change one file makes — and every tool downstream sees it the same way.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="keepers">
+      <div class="wrap">
+        <div class="section-header">
+          <span class="eyebrow">The six keepers</span>
+          <h2>Meet the keepers.</h2>
         </div>
-        <div class="tag">"Nothing gets in unwatched."</div>
-        <p class="desc">An ensemble of independent AI reviewers — each with its own mandate — evaluates every pull request before it merges, citing your own product doc while doing it.</p>
+        <div class="card-grid three">
+          {keepers.map((k) => (
+            <div class="card">
+              <div class="keeper-top">
+                <div class="badge" aria-hidden="true" set:html={badges[k.name]} />
+                <h3>{k.name}</h3>
+              </div>
+              <p class="keeper-tag">“{k.tag}”</p>
+              <p>{k.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
+    </section>
 
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================ PROOF -->
-<section>
-  <div class="wrap">
-    <div class="eyebrow">proof, not promises</div>
-    <h2>We didn't wait for testers to find the first bugs.</h2>
-    <p class="lede narrow" style="margin-top:18px; color:var(--ink-soft); font-size:16px;">
-      Ward and Judge have already been turned loose on Devkeep's own code — including on each other. A few of what they found, before anyone outside got a look:
-    </p>
-
-    <div class="finding">
-      <div class="verdict warn">Found &amp; fixed</div>
-      <div class="body">
-        <h4>A vault write path with no real check on the destination</h4>
-        <p>Ward's security lens, reviewing a sibling module, caught a route that let any signed-in caller name which vault a write landed in — latent while one person runs one vault, live the moment it's shared. Fixed before it shipped to more than one person.</p>
+    <section class="alt">
+      <div class="wrap">
+        <div class="section-header">
+          <span class="eyebrow">Proof, not promises</span>
+          <h2>We didn't wait for testers to find the first bugs.</h2>
+          <p>Ward and Judge have already been turned loose on Devkeep's own code — including on each other. A few of what they found, before anyone outside got a look:</p>
+        </div>
+        <div class="findings">
+          {findings.map((f) => (
+            <div class="card finding">
+              <div class="finding-title-row">
+                <h3>{f.title}</h3>
+                <span class={`verdict ${f.tone}`}>{f.verdict}</span>
+              </div>
+              <p>{f.body}</p>
+            </div>
+          ))}
+          <p class="findings-note">That's the level of scrutiny we want turned on your own repos next.</p>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="finding">
-      <div class="verdict good">Sound with concerns</div>
-      <div class="body">
-        <h4>Judge's first cold read of an unfamiliar codebase</h4>
-        <p>No prior context, no hand-holding — pointed at a repo it had never seen and asked to audit it the way an outside consultant would. It came back with 33 real, evidenced findings and an honest verdict, not a rubber stamp.</p>
+    <section>
+      <div class="wrap">
+        <div class="section-header">
+          <span class="eyebrow">Who it's for</span>
+          <h2>One requirement: your repos live on GitHub.</h2>
+        </div>
+        <div class="prose">
+          <p>Devkeep scales down as easily as it scales up — a solo developer gets the same six tools a twelve-person team does, with nothing else to set up first.</p>
+          <p>It's built for how code actually gets written now: alongside an AI coworker, not instead of one. Every linked project ships with instructions that keep those agents honest about documentation as they work — so moving fast doesn't mean losing track of why the code is the way it is.</p>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="finding">
-      <div class="verdict warn">Found in the wild</div>
-      <div class="body">
-        <h4>A doc-parsing bug that made a module invisible to its own tools</h4>
-        <p>A stray mention of a heading inside a sentence was enough to make the requirements parser stop at the wrong place — silently, and in the direction that looked like good news. Found through real use, not a spec review.</p>
+    <section class="alt">
+      <div class="wrap">
+        <div class="section-header">
+          <span class="eyebrow">The alpha</span>
+          <h2>What we're asking, and what you get.</h2>
+        </div>
+        <div class="cols">
+          <div class="card">
+            <h3>What we're asking</h3>
+            <ul>
+              <li>Link a real project — or a throwaway one you don't mind poking at.</li>
+              <li>Use it the way you'd actually use a tool, not a demo.</li>
+              <li>Tell us what's confusing, what's broken, and what you didn't trust — the good notes and the blunt ones.</li>
+              <li>QAs especially: try to break it. That's the point of an alpha.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What you get</h3>
+            <ul>
+              <li>Full access to all six modules while they're free and still moving fast.</li>
+              <li>A direct line to the person actually building it — not a support queue.</li>
+              <li>A real say in what gets fixed and built next, while that's still cheap to change.</li>
+              <li>An early, close look at how a product doc-driven suite like this actually holds up under real use.</li>
+            </ul>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <p style="margin-top:28px; color:var(--ink-soft); font-size:15px;">
-      That's the level of scrutiny we want turned on your own repos next.
-    </p>
-  </div>
-</section>
-
-<!-- ============================================================ WHO -->
-<section class="panel">
-  <div class="wrap">
-    <div class="eyebrow">who it's for</div>
-    <h2>One requirement: your repos live on GitHub.</h2>
-    <div class="narrow">
-      <p style="margin-top:18px; color:var(--ink-soft); font-size:16px;">
-        Devkeep scales down as easily as it scales up — a solo developer gets the same six tools a twelve-person team does, with nothing else to set up first.
-      </p>
-      <p style="margin-top:18px; color:var(--ink-soft); font-size:16px;">
-        It's built for how code actually gets written now: alongside an AI coworker, not instead of one. Every linked project ships with instructions that keep those agents honest about documentation as they work — so moving fast doesn't mean losing track of why the code is the way it is.
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================ ASK/GET -->
-<section>
-  <div class="wrap">
-    <div class="eyebrow">the alpha</div>
-    <h2>What we're asking, and what you get.</h2>
-    <div class="cols">
-      <div class="col">
-        <h3>What we're asking</h3>
-        <ul>
-          <li>Link a real project — or a throwaway one you don't mind poking at.</li>
-          <li>Use it the way you'd actually use a tool, not a demo.</li>
-          <li>Tell us what's confusing, what's broken, and what you didn't trust — the good notes and the blunt ones.</li>
-          <li>QAs especially: try to break it. That's the point of an alpha.</li>
-        </ul>
+    <section class="cta" id="join">
+      <div class="wrap">
+        <div class="cta-badge" aria-hidden="true" set:html={badges.Devkeep} />
+        <h2>Help us find what we missed.</h2>
+        <p class="lede">A handful of spots are open in this round. If you're a developer or QA who likes finding the seams in something new, we'd like your eyes on this before anyone else's.</p>
+        <a class="btn btn-primary" href="mailto:dev@starterculturestudio.com?subject=Devkeep%20alpha%20—%20I%27m%20in">Email dev@starterculturestudio.com</a>
+        <p class="tagline">Your code is your kingdom. Every kingdom needs a keep.</p>
+        <p class="footnote">Devkeep · Alpha program · 2026</p>
       </div>
-      <div class="col">
-        <h3>What you get</h3>
-        <ul>
-          <li>Full access to all six modules while they're free and still moving fast.</li>
-          <li>A direct line to the person actually building it — not a support queue.</li>
-          <li>A real say in what gets fixed and built next, while that's still cheap to change.</li>
-          <li>An early, close look at how a product doc-driven suite like this actually holds up under real use.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-<!-- ============================================================ CTA -->
-<section class="cta">
-  <div class="wrap">
-    <div class="badge" style="margin: 0 auto 24px;" aria-hidden="true">
-      <svg viewBox="0 0 140 140"><rect width="140" height="140" rx="28" fill="#23264D"/><path d="M48,30.9 L24,70 L48,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M92,30.9 L116,70 L92,109.1" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><rect x="60.34" y="50.80" width="19.32" height="55.20" fill="#D9A441"/><rect x="60.34" y="38.80" width="4.14" height="12.00" fill="#D9A441"/><rect x="67.93" y="34.00" width="4.14" height="16.80" fill="#D9A441"/><rect x="75.52" y="38.80" width="4.14" height="12.00" fill="#D9A441"/><rect x="67.93" y="62.80" width="4.14" height="7.20" fill="#23264D"/></svg>
-    </div>
-    <h2>Help us find what we missed.</h2>
-    <p class="lede">A handful of spots are open in this round. If you're a developer or QA who likes finding the seams in something new, we'd like your eyes on this before anyone else's.</p>
-    <a class="cta-button" href="mailto:dev@starterculturestudio.com?subject=Devkeep%20alpha%20—%20I%27m%20in">Email dev@starterculturestudio.com →</a>
-    <p class="tagline">Your code is your kingdom, and every kingdom needs a keep.</p>
-  </div>
-</section>
+  </main>
 
-<footer>DEVKEEP · ALPHA PROGRAM · 2026 · <a href="/">by StarterCulture</a></footer>
-
+  <Footer />
 </Layout>
 
-<style is:global>
-  :root{
-    --bg:#F6F0E2;
-    --bg-panel:#FFFFFF;
-    --bg-panel-2:#EFE7D3;
-    --ink:#22233F;
-    --ink-soft:#54547A;
-    --ink-faint:#8A8AA8;
-    --accent:#9C6B1F;
-    --accent-bright:#B9812B;
-    --line:#DCD0AC;
-    --brand-navy:#23264D;
-    --brand-gold:#D9A441;
-    --good:#2F7A4F;
-    --warn:#9C6B1F;
-    --crit:#B0402E;
-    --font-display:'Fraunces', Georgia, 'Times New Roman', serif;
-    --font-body:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-mono:'IBM Plex Mono', 'SF Mono', Consolas, monospace;
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#13152C;
-      --bg-panel:#1B1E42;
-      --bg-panel-2:#191B3B;
-      --ink:#ECE9F7;
-      --ink-soft:#AEB0D6;
-      --ink-faint:#7C7EA6;
-      --accent:#D9A441;
-      --accent-bright:#F0C879;
-      --line:#33365C;
-    }
-  }
-  :root[data-theme="dark"]{
-    --bg:#13152C;
-    --bg-panel:#1B1E42;
-    --bg-panel-2:#191B3B;
-    --ink:#ECE9F7;
-    --ink-soft:#AEB0D6;
-    --ink-faint:#7C7EA6;
-    --accent:#D9A441;
-    --accent-bright:#F0C879;
-    --line:#33365C;
+<style>
+  /* Page-only extension of the site palette: a slightly stronger rule for
+     diagram lines/boxes, where --line alone is too faint to read. */
+  .devkeep {
+    --line-strong: rgba(43, 35, 32, 0.22);
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   }
 
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body{
+  /* Alternating paper sections, as on the homepage's Studio/Contact. */
+  section.alt {
+    background: var(--paper);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* Hero -- same scale and hierarchy as the homepage hero */
+  .hero {
+    padding: 96px 0 80px;
+    text-align: center;
+  }
+
+  .hero-badge,
+  .cta-badge {
+    border-radius: 22%;
+    overflow: hidden;
+    margin: 0 auto 28px;
+  }
+
+  .hero-badge { width: 96px; height: 96px; }
+  .cta-badge { width: 64px; height: 64px; margin-bottom: 20px; }
+
+  .hero-badge :global(svg),
+  .cta-badge :global(svg),
+  .badge :global(svg) { width: 100%; height: 100%; display: block; }
+
+  /* Devkeep's angle-bracket motif: large brackets flanking the hero text, and
+     <...> around every section eyebrow (scoped -- other pages' eyebrows are
+     untouched). */
+  .hero-textblock {
+    position: relative;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 12px 0;
+  }
+
+  .hero-brackets {
+    position: absolute;
+    /* Extend past the text block so the brackets overhang the title above
+       and the description below. */
+    inset: -40px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .hero-brackets svg { height: 100%; max-height: 380px; width: auto; }
+
+  .hero-brackets path {
+    fill: none;
+    stroke: var(--terracotta);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .hero-textblock h1,
+  .hero-textblock p { position: relative; }
+
+  /* Narrower than the site .lede, for clear space between it and the brackets */
+  .hero-textblock .lede { max-width: 520px; }
+
+  .eyebrow::before,
+  .eyebrow::after {
+    font-family: var(--mono);
+    font-weight: 500;
+  }
+
+  .eyebrow::before { content: "<"; margin-right: 8px; }
+  .eyebrow::after { content: ">"; margin-left: 8px; }
+
+  /* site.css's h2 has no line-height of its own; this page's longer,
+     two-line headings need a tighter one. */
+  h2 { line-height: 1.2; }
+
+  h1 {
+    font-size: clamp(40px, 7vw, 60px);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    margin: 0 0 16px;
+    color: var(--brown);
+  }
+
+  .tagline {
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    font-style: italic;
+    font-size: clamp(18px, 2.3vw, 22px);
+    line-height: 1.4;
+    color: var(--brown-soft);
+    margin: 0 0 20px;
+  }
+
+  .lede {
+    font-size: 19px;
+    color: var(--brown-soft);
+    max-width: 620px;
+    margin: 0 auto;
+  }
+
+  .cue {
+    margin: 40px 0 0;
+    font-size: 14px;
+    color: var(--brown-soft);
+  }
+
+  code,
+  .mono {
+    font-family: var(--mono);
+  }
+
+  code {
+    font-size: 0.9em;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    padding: 1px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  /* Cards -- the site's paper card (see .product-card), cream on paper sections */
+  .card-grid {
+    display: grid;
+    gap: 20px;
+    max-width: 920px;
+    margin: 0 auto;
+  }
+
+  .card-grid.two { grid-template-columns: repeat(2, 1fr); max-width: 820px; }
+  .card-grid.three { grid-template-columns: repeat(3, 1fr); }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+
+  .alt .card { background: var(--cream); }
+
+  .card h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+
+  .card p {
+    color: var(--brown-soft);
+    font-size: 15px;
     margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--font-body);
-    font-size: 16px;
-    line-height: 1.6;
-    padding-inline: 20px;
   }
-  h1,h2,h3{ font-family: var(--font-display); font-weight: 600; text-wrap: balance; margin: 0; color: var(--ink); }
-  p { margin: 0; }
-  a { color: var(--accent-bright); text-decoration-color: var(--line); }
 
-  .wrap{ max-width: 880px; margin: 0 auto; }
-  .narrow{ max-width: 680px; margin: 0 auto; }
+  /* Same treatment as the homepage's 01/02/03 about-card numbers */
+  .card-label {
+    font-family: Georgia, serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--terracotta);
+    margin-bottom: 10px;
+  }
 
-  section{ padding-block: 76px; border-bottom: 1px solid var(--line); }
-  section.panel{ background: var(--bg-panel); }
-  section:last-of-type{ border-bottom: none; }
+  /* Keeper badge rail */
+  .rail {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
 
-  .eyebrow{
-    font-family: var(--font-mono);
-    font-size: 12.5px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--accent);
+  .rail-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 84px;
+  }
+
+  .rail-item span {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--brown-soft);
+  }
+
+  .badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 11px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .keeper-top {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-  .eyebrow::before{ content:"<"; color: var(--accent); font-family: var(--font-mono); }
-  .eyebrow::after{ content:">"; color: var(--accent); font-family: var(--font-mono); }
-
-  /* section name + title get a bit more room from the edge than the rest of the section's content */
-  section:not(.hero):not(.cta) > .wrap > .eyebrow,
-  section:not(.hero):not(.cta) > .wrap > h2{
-    padding-left: 16px;
+    gap: 14px;
+    margin-bottom: 12px;
   }
 
-  .divider{
-    display:flex; align-items:center; justify-content:center; gap:14px;
-    color: var(--accent); font-family: var(--font-mono); font-size:14px;
-    margin-block: 4px 0;
-  }
-  .divider .rule{ height:1px; width:64px; background: var(--line); }
+  .keeper-top .badge { width: 40px; height: 40px; border-radius: 9px; }
+  .keeper-top h3 { margin: 0; font-size: 19px; }
 
-  /* ---------- badges ---------- */
-  .badge{
-    width: 64px; height: 64px; border-radius: 13px; background: var(--brand-navy);
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    box-shadow: 0 1px 0 rgba(0,0,0,0.06);
-  }
-  .badge svg{ width: 100%; height: 100%; display:block; }
-  .badge.lg{ width: 132px; height: 132px; border-radius: 27px; }
-  .badge.sm{ width: 40px; height: 40px; border-radius: 9px; }
-
-  /* ---------- hero ---------- */
-  .hero{ padding-block: 92px 84px; text-align:center; position:relative; overflow:hidden; }
-  .hero-textblock{ position:relative; margin-top: 34px; }
-  .hero-brackets{
-    position:absolute; inset:0; display:flex; justify-content:space-between; align-items:center;
-    padding-inline: 4%; pointer-events:none; opacity:0.5; z-index:0;
-  }
-  .hero-brackets svg{ height: 50vh; max-height: 340px; width:auto; }
-  .hero-textblock-inner{ position:relative; z-index:1; }
-  .hero-inner{ position:relative; z-index:1; }
-  .hero .badge{ margin: 0 auto 28px; }
-  .hero h1{ font-size: clamp(40px, 7vw, 68px); letter-spacing: -0.01em; }
-  .hero .tagline{
-    font-family: var(--font-display); font-style: italic; font-size: clamp(18px, 2.4vw, 22px);
-    color: var(--ink-soft); margin-top: 18px;
-  }
-  .hero .lede{ margin-top: 26px; font-size: 17px; color: var(--ink-soft); }
-  .hero .lede.hero-lede{ max-width: 520px; margin-inline: auto; }
-  .hero .cue{
-    margin-top: 48px; font-family: var(--font-mono); font-size: 13px; color: var(--ink-faint);
+  .card .keeper-tag {
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    font-style: italic;
+    color: var(--terracotta);
+    margin-bottom: 10px;
   }
 
-  /* ---------- pain cards ---------- */
-  .pain-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 40px; }
-  .pain-card{
-    background: var(--bg-panel); border: 1px solid var(--line); border-radius: 14px;
-    padding: 22px 22px 24px;
+  /* Diagram */
+  .diagram {
+    max-width: 820px;
+    margin: 0 auto;
   }
-  .pain-card .k{ font-family: var(--font-mono); font-size: 12px; color: var(--accent); letter-spacing:0.04em; }
-  .pain-card h3{ font-size: 19px; margin-top: 8px; }
-  .pain-card p{ margin-top: 8px; color: var(--ink-soft); font-size: 15px; }
 
-  /* ---------- rail mockup ---------- */
-  .rail-mock{
-    display:flex; gap: 12px; justify-content:center; flex-wrap:wrap; margin-top: 40px;
+  .diagram svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   }
-  .rail-item{ display:flex; flex-direction:column; align-items:center; gap:8px; width: 84px; }
-  .rail-item span{ font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-faint); }
 
-  /* ---------- diagram ---------- */
-  .diagram{ margin-top: 44px; }
-  .diagram-fig{ width:100%; }
-  .diagram figcaption{ margin-top:10px; text-align:center; font-family: var(--font-mono); font-size:12.5px; color: var(--ink-faint); }
-  .diag-label{ font-family: var(--font-mono); font-size: 12.5px; }
+  /* Paper-colored outline behind captions, so the connector lines read as
+     passing behind the text instead of through it. */
+  .diagram .halo {
+    stroke: var(--paper);
+    stroke-width: 6px;
+    stroke-linejoin: round;
+    paint-order: stroke;
+  }
 
-  /* ---------- module grid ---------- */
-  .module-grid{
-    display:grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 44px;
-    padding-inline: 14px;
+  .diagram figcaption {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--brown-soft);
   }
-  .module-card{
-    background: var(--bg-panel); border:1px solid var(--line); border-radius: 16px;
-    padding: 22px; display:flex; flex-direction:column; gap: 12px;
-  }
-  .module-card .top{ display:flex; align-items:center; gap: 14px; }
-  .module-card h3{ font-size: 19px; }
-  .module-card .tag{
-    font-family: var(--font-mono); font-size: 12.5px; color: var(--accent);
-  }
-  .module-card .tag::before{ content:"// "; color: var(--ink-faint); }
-  .module-card p.desc{ font-size: 14.5px; color: var(--ink-soft); }
 
-  /* ---------- finding cards ---------- */
-  .finding{
-    background: var(--bg-panel); border:1px solid var(--line); border-radius: 14px;
-    padding: 20px 22px; display:flex; gap: 16px; align-items:flex-start; margin-top:14px;
+  /* Findings -- verdicts use the site's status-pill shape */
+  .findings {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
-  .finding .verdict{
-    font-family: var(--font-mono); font-size: 11.5px; letter-spacing:0.04em; text-transform:uppercase;
-    padding: 4px 10px; border-radius: 999px; flex-shrink:0; white-space:nowrap; margin-top: 2px;
+
+  .finding { padding: 24px 28px; }
+
+  /* Title + verdict pill on one row, like the homepage's .product-title-row */
+  .finding-title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin-bottom: 8px;
   }
-  .finding .verdict.good{ background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good); }
-  .finding .verdict.warn{ background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
-  .finding .body h4{ font-family: var(--font-body); font-weight:600; font-size:15.5px; margin:0 0 4px; }
-  .finding .body p{ font-size: 14.5px; color: var(--ink-soft); }
 
-  /* ---------- pull quote ---------- */
-  blockquote{
-    margin: 40px 0 0; padding: 0 0 0 22px; border-left: 3px solid var(--accent);
-    font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--ink);
+  .finding-title-row h3 { margin: 0; }
+
+  .verdict {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 4px 10px;
+    border-radius: 999px;
   }
-  blockquote cite{ display:block; margin-top:10px; font-family: var(--font-mono); font-style:normal; font-size:13px; color: var(--ink-faint); }
 
-  /* ---------- ask / get columns ---------- */
-  .cols{ display:grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 40px; padding-inline: 16px; }
-  .col h3{ font-size: 16px; font-family: var(--font-mono); text-transform:uppercase; letter-spacing:0.06em; color: var(--ink-faint); margin-bottom: 16px; }
-  .col ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:14px; }
-  .col li{ font-size: 15.5px; color: var(--ink-soft); padding-left: 20px; position:relative; }
-  .col li::before{ content:"—"; position:absolute; left:0; color: var(--accent); }
+  .verdict.warn { color: var(--terracotta-dark); background: rgba(181, 72, 43, 0.10); }
+  .verdict.good { color: var(--moss); background: rgba(63, 75, 61, 0.12); }
 
-  /* ---------- cta ---------- */
-  .cta{ text-align:center; }
-  .cta h2{ font-size: clamp(30px, 5vw, 42px); }
-  .cta .lede{ margin-top:16px; color: var(--ink-soft); font-size:16px; max-width: 480px; margin-inline: auto; }
-  .cta-button{
-    display:inline-block; margin-top: 32px; padding: 14px 30px;
-    background: var(--brand-navy); color: #F0C879; border-radius: 10px;
-    font-family: var(--font-mono); font-size: 15px; text-decoration:none;
-    border: 1px solid var(--brand-navy);
+  .findings-note {
+    margin: 14px 0 0;
+    text-align: center;
+    color: var(--brown-soft);
+    font-size: 15px;
   }
-  .cta-button:hover{ background: color-mix(in srgb, var(--brand-navy) 88%, black); }
-  .cta .tagline{ margin-top: 40px; font-family: var(--font-display); font-style: italic; color: var(--ink-faint); font-size: 15px; }
-  footer{ text-align:center; padding-block: 32px 60px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint); }
-  footer a{ color: var(--ink-faint); }
-  footer a:hover{ color: var(--accent-bright); }
 
-  @media (max-width: 700px){
-    .pain-grid{ grid-template-columns: 1fr; }
-    .module-grid{ grid-template-columns: 1fr; }
-    .cols{ grid-template-columns: 1fr; gap: 32px; }
-    section{ padding-block: 56px; }
-    .hero{ padding-block: 64px 56px; }
-    .hero-brackets svg{ height: 38vh; max-height: 220px; }
-    .hero .lede.hero-lede{ max-width: 100%; }
+  /* Who it's for */
+  .prose {
+    max-width: 620px;
+    margin: 0 auto;
+  }
+
+  .prose p {
+    color: var(--brown-soft);
+    font-size: 17px;
+    margin: 0 0 16px;
+  }
+
+  .prose p:last-child { margin-bottom: 0; }
+
+  /* Ask / get */
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .cols h3 { margin-bottom: 16px; }
+
+  .cols ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cols li {
+    position: relative;
+    padding-left: 22px;
+    color: var(--brown-soft);
+    font-size: 15px;
+  }
+
+  .cols li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--terracotta);
+  }
+
+  /* CTA */
+  .cta { text-align: center; padding: 88px 0; }
+  .cta h2 { margin-bottom: 14px; }
+  .cta .lede { font-size: 17px; max-width: 520px; }
+  .cta .btn { margin-top: 32px; }
+
+  .cta .tagline {
+    margin: 40px 0 0;
+    font-size: 16px;
+  }
+
+  .footnote {
+    margin: 24px 0 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brown-soft);
+    opacity: 0.7;
+  }
+
+  @media (max-width: 760px) {
+    .card-grid.three { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 680px) {
+    .hero { padding: 64px 0 56px; }
+    .hero-brackets { opacity: 0.25; }
+    .hero-brackets svg { max-height: 220px; }
+    .card-grid.two,
+    .card-grid.three,
+    .cols { grid-template-columns: 1fr; }
+    code { white-space: normal; }
   }
 </style>
