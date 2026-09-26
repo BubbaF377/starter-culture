@@ -8,9 +8,9 @@
 5=9d6ef33981d4
 6=f29646e9d9b3
 7=f5bdd181dc64
-8=4d6e6fc97e0b
+8=97149d6e570a
 9=a6047b28b63c
-10=ec96e2b4f1a0
+10=9991ee03c410
 11=f5a4398069d8
 12=73c935047264
 -->
@@ -142,7 +142,7 @@
 **Preconditions:** Site is running (locally or deployed) and the page footer is visible.
 **Steps:**
 1. Inspect all links present in the footer, including the Login dropdown menu.
-**Expected Result:** No link to `/about` appears in the footer (page not yet published — leading-underscore `_about.astro` is excluded from routing). The footer's Login dropdown (a `<details>`/`<summary>` element styled via `.login-dropdown`/`.login-menu`, opening upward so it stays on-screen) contains "Client Login" and "Company Login" options linking to `/client-login` and `/company-login` respectively — both pages are live and routable, though each still carries a "🚧 Not yet connected — UI preview only" badge since real auth isn't wired up yet.
+**Expected Result:** No link to `/about` appears in the footer (page not yet published — leading-underscore `_about.astro` is excluded from routing). The footer's Login dropdown (a `<details>`/`<summary>` element styled via `.login-dropdown`/`.login-menu`, opening upward so it stays on-screen) contains "Client Login" and "Company Login" options linking to `/client-login` and `/company-login` respectively — both pages are live and routable. Client Login is fully wired up end-to-end against real Supabase Edge Functions (OTP request/verify) and has been tested with a real client record and a real delivered email. Company Login's UI calls real Supabase Auth (magic-link), though the admin area it leads to doesn't exist yet.
 
 ### TC-NAV-03 — Direct navigation to /about returns not-found; /client-login and /company-login are reachable
 **Requirement(s):** #9, #10
@@ -150,7 +150,7 @@
 **Steps:**
 1. Manually enter `starterculturestudio.com/about` in the browser address bar.
 2. Manually enter `starterculturestudio.com/client-login` and `starterculturestudio.com/company-login` in the browser address bar.
-**Expected Result:** The `/about` request returns a 404/not-found page — the route is not built (excluded via leading underscore, no real names finalized). The `/client-login` and `/company-login` requests successfully load their respective UI-preview pages (each displaying a "🚧 Not yet connected — UI preview only" badge), not a 404. On `/client-login`, submitting the Client ID form reveals a passcode-entry step client-side (with a "← Use a different Client ID" link back), and on `/company-login`, submitting the email form reveals a "check your email" confirmation step client-side — no real lookup, OTP email, or magic-link email is sent yet in either case.
+**Expected Result:** The `/about` request returns a 404/not-found page — the route is not built (excluded via leading underscore, no real names finalized). The `/client-login` and `/company-login` requests successfully load their respective live pages, not a 404. On `/client-login`, submitting a valid Client ID calls the real `client-otp-request` Edge Function and reveals a passcode-entry step (with a "← Use a different Client ID" link back); submitting the correct passcode (sent via a real Resend email) calls `client-otp-verify`, stores a session token, and redirects to `/client-portal`, while errors such as an incorrect or expired code render inline via `.form-error`. On `/company-login`, submitting the email form calls Supabase Auth's real `/auth/v1/otp` endpoint and shows a generic "check your email" confirmation step regardless of whether the email is a known team account; following a real magic link back to `/company-login` shows "Logged in as {email} — admin area isn't built yet," since no admin area exists yet.
 
 ## Deployment & Domain
 
