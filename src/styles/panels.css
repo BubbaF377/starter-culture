@@ -1,0 +1,276 @@
+/* Shared layout for the signed-in "panel" pages: Company Admin, Company
+   Testers, and the tester page. Imported after site.css. */
+
+.panel-main {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 48px 20px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.panel-header h1 {
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-weight: 500;
+  font-size: 28px;
+  margin: 0 0 4px;
+}
+
+.panel-header .sub {
+  color: var(--brown-soft);
+  font-size: 14px;
+  margin: 0;
+}
+
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+  margin-top: 8px;
+}
+
+.panel-header-actions a {
+  color: var(--terracotta);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.panel-header-actions a:hover { color: var(--terracotta-dark); }
+
+/* site.css only styles .link-btn inside .login-card */
+.panel-main .link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--brown-soft);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.panel-main .link-btn:hover { color: var(--terracotta); }
+
+.panel-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.panel-card h2 {
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-weight: 500;
+  font-size: 20px;
+  margin: 0 0 20px;
+}
+
+.panel-card .hint {
+  color: var(--brown-soft);
+  font-size: 14px;
+  margin: -12px 0 20px;
+}
+
+.panel-card .empty {
+  color: var(--brown-soft);
+  font-size: 14px;
+  margin: 0;
+}
+
+.panel-card form { text-align: left; }
+
+.panel-card label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brown-soft);
+  margin-bottom: 6px;
+}
+
+.panel-card .field { margin-bottom: 16px; }
+
+.panel-card input[type="text"],
+.panel-card input[type="email"],
+.panel-card input[type="tel"],
+.panel-card select,
+.panel-card textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--cream);
+  color: var(--brown);
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.panel-card textarea {
+  min-height: 140px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.panel-card input[type="file"] {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--brown-soft);
+  max-width: 100%;
+}
+
+/* A checkbox with its label text on one line */
+.panel-card .check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--brown);
+  margin: 0;
+}
+
+.panel-card .check-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.panel-card button[type="submit"],
+.panel-card .btn-small {
+  padding: 13px 26px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  background: var(--terracotta);
+  color: var(--paper);
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.15s ease;
+}
+
+.panel-card .btn-small { padding: 9px 18px; font-size: 14px; }
+
+.panel-card button[type="submit"]:hover,
+.panel-card .btn-small:hover { background: var(--terracotta-dark); }
+
+.panel-card button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.panel-main .form-error,
+.panel-main .form-success {
+  font-size: 13px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0 0 16px;
+}
+
+.panel-main .form-error {
+  color: var(--terracotta-dark);
+  background: rgba(181, 72, 43, 0.08);
+}
+
+.panel-main .form-success {
+  color: #2f5c3f;
+  background: rgba(47, 92, 63, 0.1);
+}
+
+/* Same shape as the homepage's .status-pill */
+.pill {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--terracotta-dark);
+  background: rgba(181, 72, 43, 0.10);
+  padding: 3px 10px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.progress {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.progress > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--terracotta);
+  transition: width 0.15s ease;
+}
+
+.thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.thumbs a { display: block; }
+
+.thumbs img {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  display: block;
+  background: var(--cream);
+}
+
+/* Tables scroll sideways on phones instead of squashing or overflowing. */
+.table-scroll { overflow-x: auto; }
+.table-scroll table { min-width: 460px; }
+
+.panel-card table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.panel-card th,
+.panel-card td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.panel-card th {
+  color: var(--brown-soft);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.mono {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.95em;
+}
+
+@media (max-width: 680px) {
+  .panel-main { padding: 32px 20px; }
+  .panel-card { padding: 22px; }
+  .panel-header { flex-direction: column; gap: 8px; }
+  .panel-header-actions { margin-top: 0; }
+}

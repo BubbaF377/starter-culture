@@ -1,0 +1,158 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/site.css';
+---
+
+<Layout
+  title="Tester Login — StarterCulture"
+  description="Tester login for StarterCulture — download the builds you're testing and send feedback."
+>
+  <Header links={[{ href: '/', label: 'Home' }]} />
+
+  <main class="auth-main">
+    <div class="login-card">
+      <div class="lock-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#B5482B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="10" width="16" height="10" rx="2"/>
+          <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+        </svg>
+      </div>
+      <h1>Tester Login</h1>
+      <p class="sub">This page is for StarterCulture alpha testers. Log in to download the builds you're testing and send us your notes and screenshots.</p>
+
+      <div id="step-id">
+        <p id="id-error" class="form-error" hidden></p>
+        <form id="tester-id-form" novalidate>
+          <div class="field">
+            <label for="tester-id">Tester ID</label>
+            <input type="text" id="tester-id" name="tester-id" placeholder="e.g. A1B2C3" maxlength="6" autocomplete="off" autocapitalize="characters" required />
+          </div>
+          <button type="submit">Continue</button>
+        </form>
+      </div>
+
+      <div id="step-otp" hidden>
+        <p class="otp-note">We've sent a one-time passcode to the email on file for this Tester ID. Enter it below to continue.</p>
+        <p id="otp-error" class="form-error" hidden></p>
+        <form id="otp-form" novalidate>
+          <div class="field">
+            <label for="otp">Passcode</label>
+            <input type="text" id="otp" name="otp" placeholder="000000" maxlength="6" autocomplete="one-time-code" inputmode="numeric" required />
+          </div>
+          <button type="submit">Verify</button>
+        </form>
+        <button type="button" id="otp-back" class="link-btn">&larr; Use a different Tester ID</button>
+      </div>
+
+      <p id="login-note">Don't have a Tester ID? Reach out at <a href="mailto:dev@starterculturestudio.com">dev@starterculturestudio.com</a>.</p>
+    </div>
+  </main>
+
+  <p class="back-link"><a href="/">&larr; Back to home</a></p>
+
+  <Footer />
+
+  <script>
+    import { signInWithCustomToken } from 'firebase/auth';
+    import { httpsCallable } from 'firebase/functions';
+    import { auth, functions } from '../lib/firebase-config';
+
+    const testerOtpRequest = httpsCallable<{ testerId: string }, { ok: true }>(functions, 'testerOtpRequest');
+    const testerOtpVerify = httpsCallable<
+      { testerId: string; code: string },
+      { ok: true; token: string } | { ok: false; error: string }
+    >(functions, 'testerOtpVerify');
+
+    const idForm = document.querySelector<HTMLFormElement>('#tester-id-form');
+    const otpForm = document.querySelector<HTMLFormElement>('#otp-form');
+    const stepId = document.querySelector<HTMLDivElement>('#step-id');
+    const stepOtp = document.querySelector<HTMLDivElement>('#step-otp');
+    const backBtn = document.querySelector<HTMLButtonElement>('#otp-back');
+    const idError = document.querySelector<HTMLParagraphElement>('#id-error');
+    const otpError = document.querySelector<HTMLParagraphElement>('#otp-error');
+    const testerIdInput = document.querySelector<HTMLInputElement>('#tester-id');
+    const otpInput = document.querySelector<HTMLInputElement>('#otp');
+
+    let currentTesterId = '';
+
+    function setError(el: HTMLParagraphElement | null, message: string | null) {
+      if (!el) return;
+      if (message) {
+        el.textContent = message;
+        el.hidden = false;
+      } else {
+        el.hidden = true;
+      }
+    }
+
+    function setBusy(form: HTMLFormElement | null, busy: boolean) {
+      const btn = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+      if (btn) btn.disabled = busy;
+    }
+
+    const OTP_VERIFY_ERRORS: Record<string, string> = {
+      not_found: "That code doesn't match. Double-check it, or use a different Tester ID to request a new one.",
+      expired: 'That passcode has expired. Go back and request a new one.',
+      too_many_attempts: 'Too many incorrect attempts. Go back and request a new passcode.',
+      incorrect_code: 'Incorrect passcode. Please try again.',
+      invalid_request: 'Something went wrong. Please try again.',
+    };
+
+    idForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setError(idError, null);
+      const testerId = testerIdInput?.value.trim().toUpperCase() ?? '';
+      if (!/^[A-Z0-9]{6}$/.test(testerId)) {
+        setError(idError, 'Tester IDs are 6 characters (letters and numbers).');
+        return;
+      }
+
+      setBusy(idForm, true);
+      try {
+        await testerOtpRequest({ testerId });
+        currentTesterId = testerId;
+        if (stepId) stepId.hidden = true;
+        if (stepOtp) stepOtp.hidden = false;
+        otpInput?.focus();
+      } catch {
+        setError(idError, "Couldn't reach the server. Check your connection and try again.");
+      } finally {
+        setBusy(idForm, false);
+      }
+    });
+
+    otpForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setError(otpError, null);
+      const code = otpInput?.value.trim() ?? '';
+      if (!code) return;
+
+      setBusy(otpForm, true);
+      try {
+        const { data } = await testerOtpVerify({ testerId: currentTesterId, code });
+
+        if (data.ok) {
+          await signInWithCustomToken(auth, data.token);
+          window.location.href = '/tester';
+          return;
+        }
+
+        setError(otpError, OTP_VERIFY_ERRORS[data.error] ?? 'Something went wrong. Please try again.');
+      } catch {
+        setError(otpError, "Couldn't reach the server. Check your connection and try again.");
+      } finally {
+        setBusy(otpForm, false);
+      }
+    });
+
+    backBtn?.addEventListener('click', () => {
+      setError(otpError, null);
+      if (otpInput) otpInput.value = '';
+      if (stepOtp) stepOtp.hidden = true;
+      if (stepId) stepId.hidden = false;
+      testerIdInput?.focus();
+    });
+  </script>
+</Layout>

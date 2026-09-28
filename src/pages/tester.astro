@@ -1,0 +1,486 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/site.css';
+import '../styles/panels.css';
+---
+
+<Layout
+  title="Tester — StarterCulture"
+  description="Your StarterCulture alpha-testing builds and feedback."
+>
+  <Header links={[{ href: '/', label: 'Home' }]} />
+
+  <main class="panel-main">
+    <p id="loading" class="sub">Loading…</p>
+    <p id="page-error" class="form-error" hidden></p>
+
+    <section id="agreement" class="panel-card agreement" hidden>
+      <span class="eyebrow">Before you start</span>
+      <h2 id="agreement-title"></h2>
+      <p class="hint">Please read the agreement below. You'll need to accept it once to get to your builds.</p>
+      <div id="agreement-body" class="agreement-body" tabindex="0"></div>
+      <p id="agreement-error" class="form-error" hidden></p>
+      <div class="agreement-actions">
+        <button type="button" id="agree-btn" class="btn-small">I agree</button>
+        <button type="button" id="agreement-logout" class="link-btn">Not now — log out</button>
+      </div>
+    </section>
+
+    <div id="content" hidden>
+      <div class="panel-header">
+        <div>
+          <h1 id="greeting"></h1>
+          <p class="sub" id="tester-id-line"></p>
+        </div>
+        <div class="panel-header-actions">
+          <button type="button" id="logout-btn" class="link-btn">Log out</button>
+        </div>
+      </div>
+
+      <section class="panel-card">
+        <h2>Your builds</h2>
+        <p id="apps-empty" class="empty" hidden>No apps are assigned to you yet — we'll let you know when there's something to test.</p>
+        <div id="apps-list" class="app-list"></div>
+      </section>
+
+      <section class="panel-card" id="feedback-card">
+        <h2>Send feedback</h2>
+        <p class="hint">What worked, what broke, what confused you — the blunt notes are the useful ones. Screenshots help.</p>
+        <p id="fb-error" class="form-error" hidden></p>
+        <p id="fb-success" class="form-success" hidden></p>
+        <form id="feedback-form" novalidate>
+          <div class="field" id="fb-app-field">
+            <label for="fb-app">App</label>
+            <select id="fb-app" name="fb-app" required></select>
+          </div>
+          <div class="field">
+            <label for="fb-note">Notes</label>
+            <textarea id="fb-note" name="fb-note" maxlength="10000" required></textarea>
+          </div>
+          <div class="field">
+            <label for="fb-shots">Screenshots (optional, up to 5 images, 10 MB each)</label>
+            <input type="file" id="fb-shots" name="fb-shots" accept="image/*" multiple />
+          </div>
+          <button type="submit">Send feedback</button>
+        </form>
+      </section>
+
+      <section class="panel-card">
+        <h2>Your feedback</h2>
+        <p id="history-empty" class="empty" hidden>Nothing sent yet.</p>
+        <div id="history" class="history"></div>
+      </section>
+    </div>
+  </main>
+
+  <Footer />
+
+  <script>
+    import { onAuthStateChanged, signOut } from 'firebase/auth';
+    import {
+      collection,
+      doc,
+      getDoc,
+      getDocs,
+      orderBy,
+      query,
+      serverTimestamp,
+      setDoc,
+      updateDoc,
+      where,
+      type DocumentData,
+      type Timestamp,
+    } from 'firebase/firestore';
+    import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+    import { auth, db, storage } from '../lib/firebase-config';
+
+    const MAX_SHOTS = 5;
+    const MAX_SHOT_BYTES = 10 * 1024 * 1024;
+
+    type App = { id: string; name: string; version?: string; description?: string; file_path?: string; file_name?: string; file_size?: number };
+
+    const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
+    const loading = $('#loading');
+    const pageError = $<HTMLParagraphElement>('#page-error');
+
+    let testerId = '';
+    let apps: App[] = [];
+
+    function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
+      const node = document.createElement(tag);
+      if (cls) node.className = cls;
+      if (text != null) node.textContent = text;
+      return node;
+    }
+
+    function formatSize(bytes?: number) {
+      if (!bytes) return '';
+      const mb = bytes / (1024 * 1024);
+      return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.ceil(bytes / 1024)} KB`;
+    }
+
+    function show(p: HTMLParagraphElement, message: string | null) {
+      p.hidden = !message;
+      if (message) p.textContent = message;
+    }
+
+    async function signOutAndRedirect() {
+      await signOut(auth).catch(() => {});
+      window.location.href = '/tester-login';
+    }
+
+    $('#logout-btn').addEventListener('click', signOutAndRedirect);
+    $('#agreement-logout').addEventListener('click', signOutAndRedirect);
+
+    // --- Builds -----------------------------------------------------------
+
+    function renderApps() {
+      const list = $('#apps-list');
+      list.replaceChildren();
+      $('#apps-empty').hidden = apps.length > 0;
+      $('#feedback-card').hidden = apps.length === 0;
+
+      for (const app of apps) {
+        const card = el('div', 'app-item');
+        const title = el('div', 'app-title');
+        title.append(el('h3', undefined, app.name));
+        if (app.version) title.append(el('span', 'pill', app.version));
+        card.append(title);
+        if (app.description) card.append(el('p', 'app-desc', app.description));
+
+        const actions = el('div', 'app-actions');
+        if (app.file_path) {
+          const btn = el('button', 'btn-small', 'Download');
+          btn.type = 'button';
+          const status = el('span', 'app-file', [app.file_name, formatSize(app.file_size)].filter(Boolean).join(' · '));
+          btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            try {
+              // Rules check this tester is assigned to the app before issuing the URL.
+              window.location.href = await getDownloadURL(ref(storage, app.file_path!));
+            } catch {
+              status.textContent = "Couldn't start the download. Try again, or email dev@starterculturestudio.com.";
+            } finally {
+              btn.disabled = false;
+            }
+          });
+          actions.append(btn, status);
+        } else {
+          actions.append(el('span', 'app-file', 'Build coming soon.'));
+        }
+        card.append(actions);
+        list.append(card);
+      }
+
+      const select = $<HTMLSelectElement>('#fb-app');
+      select.replaceChildren(...apps.map((a) => {
+        const opt = el('option', undefined, a.version ? `${a.name} (${a.version})` : a.name);
+        opt.value = a.id;
+        return opt;
+      }));
+      // Only ask which app when there's a choice to make.
+      $('#fb-app-field').hidden = apps.length < 2;
+    }
+
+    // --- Feedback history -------------------------------------------------
+
+    async function loadHistory() {
+      const history = $('#history');
+      const snap = await getDocs(
+        query(collection(db, 'tester_feedback'), where('tester_id', '==', testerId), orderBy('created_at', 'desc')),
+      );
+      history.replaceChildren();
+      $('#history-empty').hidden = !snap.empty;
+
+      for (const entry of snap.docs) {
+        const data = entry.data();
+        const app = apps.find((a) => a.id === data.app_id);
+        const item = el('article', 'history-item');
+        const meta = el('p', 'history-meta');
+        const when = (data.created_at as Timestamp | null)?.toDate().toLocaleString() ?? '';
+        meta.textContent = [app?.name ?? 'App', when].filter(Boolean).join(' · ');
+        item.append(meta, el('p', 'history-note', data.note));
+
+        const shots: string[] = Array.isArray(data.screenshots) ? data.screenshots : [];
+        if (shots.length) {
+          const thumbs = el('div', 'thumbs');
+          item.append(thumbs);
+          for (const path of shots) {
+            getDownloadURL(ref(storage, path))
+              .then((url) => {
+                const a = el('a');
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener';
+                const img = el('img');
+                img.src = url;
+                img.alt = 'Screenshot';
+                img.loading = 'lazy';
+                a.append(img);
+                thumbs.append(a);
+              })
+              .catch(() => {});
+          }
+        }
+        history.append(item);
+      }
+    }
+
+    // --- Send feedback ----------------------------------------------------
+
+    const form = $<HTMLFormElement>('#feedback-form');
+    const fbError = $<HTMLParagraphElement>('#fb-error');
+    const fbSuccess = $<HTMLParagraphElement>('#fb-success');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      show(fbError, null);
+      show(fbSuccess, null);
+
+      const appId = $<HTMLSelectElement>('#fb-app').value;
+      const note = $<HTMLTextAreaElement>('#fb-note').value.trim();
+      const files = Array.from($<HTMLInputElement>('#fb-shots').files ?? []);
+
+      if (!appId) return show(fbError, 'Choose which app this is about.');
+      if (!note) return show(fbError, 'Add a note describing what you found.');
+      if (files.length > MAX_SHOTS) return show(fbError, `Attach up to ${MAX_SHOTS} screenshots.`);
+      const bad = files.find((f) => !f.type.startsWith('image/') || f.size > MAX_SHOT_BYTES);
+      if (bad) return show(fbError, `"${bad.name}" isn't an image under 10 MB.`);
+
+      const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+      submit.disabled = true;
+      submit.textContent = files.length ? 'Uploading…' : 'Sending…';
+      try {
+        // Pick the doc ID first so screenshots can live under it.
+        const entryRef = doc(collection(db, 'tester_feedback'));
+        const screenshots: string[] = [];
+        for (const [i, file] of files.entries()) {
+          const safeName = file.name.replace(/[^\w.-]+/g, '_').slice(-80);
+          const path = `feedback/${testerId}/${entryRef.id}/${i + 1}-${safeName}`;
+          await uploadBytes(ref(storage, path), file, { contentType: file.type });
+          screenshots.push(path);
+        }
+        await setDoc(entryRef, {
+          tester_id: testerId,
+          app_id: appId,
+          note,
+          screenshots,
+          created_at: serverTimestamp(),
+        });
+        form.reset();
+        show(fbSuccess, 'Thanks — your feedback was sent.');
+        loadHistory().catch(() => {});
+      } catch {
+        show(fbError, "Couldn't send your feedback. Check your connection and try again.");
+      } finally {
+        submit.disabled = false;
+        submit.textContent = 'Send feedback';
+      }
+    });
+
+    // --- Agreement gate ---------------------------------------------------
+
+    function showAgreement(agreement: DocumentData, tester: DocumentData) {
+      $('#agreement-title').textContent = agreement.title ?? 'Tester Agreement';
+      const body = $('#agreement-body');
+      body.replaceChildren(
+        ...String(agreement.body ?? '')
+          .split(/\n\s*\n/)
+          .map((para) => el('p', undefined, para.trim())),
+      );
+      loading.hidden = true;
+      $('#agreement').hidden = false;
+
+      const btn = $<HTMLButtonElement>('#agree-btn');
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        show($<HTMLParagraphElement>('#agreement-error'), null);
+        try {
+          await updateDoc(doc(db, 'testers', testerId), {
+            agreement_version: agreement.version,
+            agreement_accepted_at: serverTimestamp(),
+          });
+          $('#agreement').hidden = true;
+          loading.hidden = false;
+          await openSpace(tester);
+        } catch (err) {
+          btn.disabled = false;
+          if ((err as { code?: string }).code === 'permission-denied') {
+            // Most likely the agreement changed while this page was open.
+            show($<HTMLParagraphElement>('#agreement-error'), 'The agreement was just updated. Refresh the page to read the latest version.');
+          } else {
+            show($<HTMLParagraphElement>('#agreement-error'), "Couldn't record your acceptance. Check your connection and try again.");
+          }
+        }
+      });
+    }
+
+    // --- Load -------------------------------------------------------------
+
+    async function openSpace(data: DocumentData) {
+      const appIds: string[] = Array.isArray(data.app_ids) ? data.app_ids : [];
+      const snaps = await Promise.all(appIds.map((id) => getDoc(doc(db, 'apps', id))));
+      apps = snaps.filter((s) => s.exists()).map((s) => ({ id: s.id, ...(s.data() as Omit<App, 'id'>) }));
+
+      $('#greeting').textContent = `Hi, ${String(data.name ?? '').split(' ')[0] || 'there'}`;
+      $('#tester-id-line').textContent = `Tester ID: ${testerId}`;
+      renderApps();
+      loading.hidden = true;
+      $('#content').hidden = false;
+      await loadHistory();
+    }
+
+    function handleLoadError(err: unknown) {
+      // permission-denied means the 7-day session in firestore.rules has lapsed.
+      if ((err as { code?: string }).code === 'permission-denied') {
+        signOutAndRedirect();
+        return;
+      }
+      loading.hidden = true;
+      show(pageError, "Couldn't load your page. Check your connection and refresh.");
+    }
+
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = '/tester-login';
+        return;
+      }
+      const { claims } = await user.getIdTokenResult();
+      testerId = typeof claims.tester_id === 'string' ? claims.tester_id : '';
+      if (!testerId) {
+        // Signed in, but not as a tester (e.g. a client or staff session).
+        signOutAndRedirect();
+        return;
+      }
+
+      try {
+        const tester = await getDoc(doc(db, 'testers', testerId));
+        if (!tester.exists()) throw new Error('missing');
+        const data = tester.data();
+        if (data.active === false) {
+          // Removed from the program (docs/PRODUCT.md item 13).
+          loading.hidden = true;
+          show(pageError, 'Your tester access has ended — thanks for your help. Questions? Email dev@starterculturestudio.com.');
+          await signOut(auth).catch(() => {});
+          return;
+        }
+        const agreement = await getDoc(doc(db, 'config', 'tester_agreement'));
+
+        // The agreement gate (docs/PRODUCT.md item 13): until this tester has
+        // accepted the current version, show only the agreement. The rules
+        // enforce the same thing server-side.
+        if (agreement.exists() && data.agreement_version !== agreement.get('version')) {
+          showAgreement(agreement.data(), data);
+          return;
+        }
+        await openSpace(data);
+      } catch (err) {
+        handleLoadError(err);
+      }
+    });
+  </script>
+</Layout>
+
+<style>
+  .agreement .eyebrow { margin-bottom: 8px; }
+
+  .agreement-body {
+    max-height: 360px;
+    overflow-y: auto;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px;
+    font-size: 15px;
+    color: var(--brown);
+  }
+
+  .agreement-body :global(p) { margin: 0 0 14px; }
+  .agreement-body :global(p:last-child) { margin-bottom: 0; }
+
+  .agreement-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    margin-top: 20px;
+  }
+
+  .app-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  :global(.app-item) {
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+
+  :global(.app-title) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+  :global(.app-title h3) {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  :global(.app-desc) {
+    color: var(--brown-soft);
+    font-size: 15px;
+    margin: 8px 0 0;
+  }
+
+  :global(.app-actions) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    margin-top: 14px;
+  }
+
+  :global(.app-file) {
+    color: var(--brown-soft);
+    font-size: 13px;
+  }
+
+  .history {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  :global(.history-item) {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 14px;
+  }
+
+  :global(.history-item:last-child) {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  :global(.history-meta) {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--terracotta);
+    margin: 0 0 6px;
+  }
+
+  :global(.history-note) {
+    white-space: pre-wrap;
+    color: var(--brown);
+    font-size: 15px;
+    margin: 0;
+  }
+</style>

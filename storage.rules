@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// See docs/PRODUCT.md item 13. Staff carry a `staff: true` claim; testers a
+// `tester_id` claim (7-day session, same as Firestore).
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isStaff() {
+      return request.auth != null && request.auth.token.staff == true;
+    }
+
+    function isTester(testerId) {
+      return request.auth != null
+        && request.auth.token.tester_id == testerId
+        && request.auth.token.auth_time > request.time.toMillis() / 1000 - 7 * 24 * 60 * 60;
+    }
+
+    function testerMayDownload(tester, appId) {
+      return tester.get('active', true) == true
+        && tester.get('agreement_version', '') == firestore.get(/databases/(default)/documents/config/tester_agreement).data.version
+        && appId in tester.app_ids;
+    }
+
+    // App builds: staff upload; testers assigned to the app can download, once
+    // they've accepted the current tester agreement.
+    match /builds/{appId}/{fileName} {
+      allow read: if isStaff()
+        || (request.auth != null
+            && request.auth.token.tester_id is string
+            && isTester(request.auth.token.tester_id)
+            && testerMayDownload(firestore.get(/databases/(default)/documents/testers/$(request.auth.token.tester_id)).data, appId));
+      allow write: if isStaff() && request.resource.size < 2 * 1024 * 1024 * 1024;
+      allow delete: if isStaff();
+    }
+
+    // Feedback screenshots: a tester uploads images into their own folder.
+    match /feedback/{testerId}/{allPaths=**} {
+      allow read: if isStaff() || isTester(testerId);
+      allow create: if isTester(testerId)
+        && firestore.get(/databases/(default)/documents/testers/$(testerId)).data.get('active', true) == true
+        && firestore.get(/databases/(default)/documents/testers/$(testerId)).data.get('agreement_version', '')
+           == firestore.get(/databases/(default)/documents/config/tester_agreement).data.version
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.size < 10 * 1024 * 1024;
+    }
+  }
+}

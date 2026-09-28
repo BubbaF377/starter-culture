@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "set-staff": "node scripts/set-staff.mjs"
+    "set-staff": "node scripts/set-staff.mjs",
+    "set-agreement": "node scripts/set-agreement.mjs"
   },
   "dependencies": {
     "firebase-admin": "^14.5.0",

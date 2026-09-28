@@ -1,21 +1,49 @@
 rules_version = '2';
 
-// See docs/PRODUCT.md item 10 for the auth model:
+// See docs/PRODUCT.md items 10 and 13 for the auth model:
 // - Staff sign in with an email link and carry a `staff: true` custom claim.
-// - Clients sign in with a custom token (minted by clientOtpVerify) carrying a
-//   `client_id` claim, and may read only their own doc for 7 days after sign-in.
-// - client_otp_codes has no rules on purpose: only Cloud Functions (Admin SDK,
-//   which bypasses rules) touch it.
+// - Clients and testers sign in with a custom token (minted by the *OtpVerify
+//   functions) carrying a `client_id` / `tester_id` claim, valid for 7 days
+//   after sign-in.
+// - client_otp_codes / tester_otp_codes have no rules on purpose: only Cloud
+//   Functions (Admin SDK, which bypasses rules) touch them.
 service cloud.firestore {
   match /databases/{database}/documents {
     function isStaff() {
       return request.auth != null && request.auth.token.staff == true;
     }
 
+    function freshSession() {
+      return request.auth.token.auth_time > request.time.toMillis() / 1000 - 7 * 24 * 60 * 60;
+    }
+
     function isClient(clientId) {
+      return request.auth != null && request.auth.token.client_id == clientId && freshSession();
+    }
+
+    function isTester(testerId) {
+      return request.auth != null && request.auth.token.tester_id == testerId && freshSession();
+    }
+
+    // The signed-in tester's own record (only call once isTester-style checks
+    // have established request.auth.token.tester_id exists).
+    function myTester() {
+      return get(/databases/$(database)/documents/testers/$(request.auth.token.tester_id)).data;
+    }
+
+    function currentAgreementVersion() {
+      return get(/databases/$(database)/documents/config/tester_agreement).data.version;
+    }
+
+    // The tester-agreement gate (docs/PRODUCT.md item 13): nothing assigned to
+    // a tester is readable until they've accepted the current agreement.
+    function testerHasApp(appId) {
       return request.auth != null
-        && request.auth.token.client_id == clientId
-        && request.auth.token.auth_time > request.time.toMillis() / 1000 - 7 * 24 * 60 * 60;
+        && request.auth.token.tester_id is string
+        && freshSession()
+        && myTester().get('active', true) == true
+        && myTester().get('agreement_version', '') == currentAgreementVersion()
+        && appId in myTester().app_ids;
     }
 
     match /clients/{clientId} {
@@ -26,6 +54,56 @@ service cloud.firestore {
     match /personnel/{personId} {
       allow read: if true;
       allow create, update, delete: if isStaff();
+    }
+
+    match /apps/{appId} {
+      allow read: if isStaff() || testerHasApp(appId);
+      allow create, update, delete: if isStaff();
+    }
+
+    match /testers/{testerId} {
+      allow read: if isStaff() || isTester(testerId);
+      allow create, update, delete: if isStaff();
+
+      // A tester's only write: accepting the current agreement.
+      allow update: if isTester(testerId)
+        && resource.data.get('active', true) == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['agreement_version', 'agreement_accepted_at'])
+        && request.resource.data.agreement_version == currentAgreementVersion()
+        && request.resource.data.agreement_accepted_at == request.time;
+    }
+
+    // Project history: one entry per stint on an app (docs/PRODUCT.md item 13).
+    match /testers/{testerId}/assignments/{assignmentId} {
+      allow read, write: if isStaff();
+    }
+
+    // Deactivation/reactivation history (docs/PRODUCT.md item 13).
+    match /testers/{testerId}/events/{eventId} {
+      allow read, write: if isStaff();
+    }
+
+    match /config/tester_agreement {
+      allow read: if isStaff()
+        || (request.auth != null && request.auth.token.tester_id is string && freshSession());
+      allow write: if isStaff();
+    }
+
+    match /tester_feedback/{feedbackId} {
+      allow read: if isStaff() || isTester(resource.data.tester_id);
+
+      // A tester files feedback as themselves, on an app assigned to them, with
+      // a server timestamp; entries are immutable afterwards.
+      allow create: if isTester(request.resource.data.tester_id)
+        && testerHasApp(request.resource.data.app_id)
+        && request.resource.data.keys().hasOnly(['tester_id', 'app_id', 'note', 'screenshots', 'created_at'])
+        && request.resource.data.note is string
+        && request.resource.data.note.size() > 0
+        && request.resource.data.note.size() <= 10000
+        && request.resource.data.screenshots is list
+        && request.resource.data.screenshots.size() <= 5
+        && request.resource.data.created_at == request.time;
+      allow delete: if isStaff();
     }
   }
 }

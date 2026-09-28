@@ -1,0 +1,885 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/site.css';
+import '../styles/panels.css';
+---
+
+<Layout
+  title="Testers — StarterCulture"
+  description="StarterCulture team admin: tester program."
+>
+  <Header links={[{ href: '/', label: 'Home' }]} />
+
+  <main class="panel-main">
+    <div class="panel-header">
+      <div>
+        <h1>Testers</h1>
+        <p class="sub" id="admin-whoami"></p>
+      </div>
+      <div class="panel-header-actions">
+        <a href="/company-admin">← Clients</a>
+        <button type="button" id="logout-btn" class="link-btn">Log out</button>
+      </div>
+    </div>
+
+    <!-- Apps ---------------------------------------------------------------->
+    <section class="panel-card">
+      <h2>Apps</h2>
+      <p class="hint">Each app has one current build. Testers only see apps you assign to them.</p>
+      <p id="apps-error" class="form-error" hidden></p>
+      <div id="apps-list" class="rows"></div>
+
+      <details class="add-block">
+        <summary>Add an app</summary>
+        <p id="app-create-error" class="form-error" hidden></p>
+        <form id="new-app-form" novalidate>
+          <div class="field">
+            <label for="app-name">Name</label>
+            <input type="text" id="app-name" autocomplete="off" required />
+          </div>
+          <div class="field">
+            <label for="app-version">Version</label>
+            <input type="text" id="app-version" autocomplete="off" placeholder="e.g. 0.3.0-alpha" />
+          </div>
+          <div class="field">
+            <label for="app-description">Description (shown to testers)</label>
+            <textarea id="app-description" rows="3"></textarea>
+          </div>
+          <div class="field">
+            <label for="app-file">Build file (optional — you can also upload it later)</label>
+            <input type="file" id="app-file" />
+            <div class="progress" id="app-progress" hidden><span id="app-progress-fill"></span></div>
+          </div>
+          <button type="submit">Add app</button>
+        </form>
+      </details>
+    </section>
+
+    <!-- Testers ------------------------------------------------------------->
+    <section class="panel-card">
+      <h2>Testers</h2>
+      <p id="testers-error" class="form-error" hidden></p>
+      <p id="testers-notice" class="form-success" hidden></p>
+      <label class="check show-removed"><input type="checkbox" id="show-removed" /> Show removed testers</label>
+      <p id="testers-empty" class="empty" hidden>No testers yet.</p>
+      <div class="table-scroll">
+        <table id="testers-table" class="testers-table" hidden>
+          <thead>
+            <tr><th>Tester ID</th><th>Name</th><th>Added</th><th>Agreement</th><th>Apps</th><th></th></tr>
+          </thead>
+          <tbody id="testers-tbody"></tbody>
+        </table>
+      </div>
+
+      <details class="add-block">
+        <summary>Add a tester</summary>
+        <p id="tester-create-error" class="form-error" hidden></p>
+        <p id="tester-create-success" class="form-success" hidden></p>
+        <form id="new-tester-form" novalidate>
+          <div class="field">
+            <label for="tester-name">Name</label>
+            <input type="text" id="tester-name" autocomplete="off" required />
+          </div>
+          <div class="field">
+            <label for="tester-email">Email</label>
+            <input type="email" id="tester-email" autocomplete="off" required />
+          </div>
+          <div class="field">
+            <label>Apps</label>
+            <div id="tester-apps" class="check-list"></div>
+          </div>
+          <button type="submit">Add tester</button>
+        </form>
+      </details>
+    </section>
+
+    <!-- Email ---------------------------------------------------------------->
+    <section class="panel-card">
+      <h2>Email testers</h2>
+      <p class="hint">Opens a new email in your mail app. Groups go in BCC so testers don't see each other's addresses; a single tester goes in To. Send it from info@starterculturestudio.com — your mail app picks the sending account, not this page.</p>
+      <form id="email-form" novalidate>
+        <div class="field">
+          <label for="email-audience">Send to</label>
+          <select id="email-audience">
+            <option value="all">All testers</option>
+            <option value="app">Testers on one app…</option>
+            <option value="tester">One tester…</option>
+          </select>
+        </div>
+        <div class="field" id="email-app-field" hidden>
+          <label for="email-app">App</label>
+          <select id="email-app"></select>
+        </div>
+        <div class="field" id="email-tester-field" hidden>
+          <label for="email-tester">Tester</label>
+          <select id="email-tester"></select>
+        </div>
+        <div class="field">
+          <label for="email-subject">Subject (optional)</label>
+          <input type="text" id="email-subject" autocomplete="off" />
+        </div>
+        <p id="email-summary" class="row-meta"></p>
+        <div class="email-actions">
+          <button type="submit">Open email</button>
+          <button type="button" id="email-copy" class="link-btn">Copy addresses</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Feedback ------------------------------------------------------------>
+    <section class="panel-card">
+      <h2>Feedback</h2>
+      <p id="feedback-error" class="form-error" hidden></p>
+      <p id="feedback-empty" class="empty" hidden>No feedback yet.</p>
+      <div id="feedback-list" class="rows"></div>
+    </section>
+  </main>
+
+  <Footer />
+
+  <script>
+    import { onAuthStateChanged, signOut } from 'firebase/auth';
+    import {
+      addDoc,
+      arrayRemove,
+      arrayUnion,
+      collection,
+      doc,
+      getDoc,
+      getDocs,
+      limit,
+      orderBy,
+      query,
+      runTransaction,
+      serverTimestamp,
+      updateDoc,
+      where,
+      writeBatch,
+      type Timestamp,
+    } from 'firebase/firestore';
+    import { deleteObject, getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+    import { auth, db, storage } from '../lib/firebase-config';
+    import { generateId } from '../lib/ids';
+
+    type App = { id: string; name: string; version?: string; description?: string; file_path?: string; file_name?: string; file_size?: number; updated_at?: Timestamp };
+    type Tester = {
+      id: string;
+      name: string;
+      email: string;
+      app_ids: string[];
+      created_at?: Timestamp;
+      active?: boolean;
+      deactivated_at?: Timestamp;
+      reactivated_at?: Timestamp;
+      agreement_version?: string;
+      agreement_accepted_at?: Timestamp;
+    };
+
+    const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
+    let apps: App[] = [];
+    let testers: Tester[] = [];
+    let agreementVersion = '';
+
+    function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
+      const node = document.createElement(tag);
+      if (cls) node.className = cls;
+      if (text != null) node.textContent = text;
+      return node;
+    }
+
+    function show(p: HTMLParagraphElement, message: string | null) {
+      p.hidden = !message;
+      if (message) p.textContent = message;
+    }
+
+    function formatSize(bytes?: number) {
+      if (!bytes) return '';
+      const mb = bytes / (1024 * 1024);
+      return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.ceil(bytes / 1024)} KB`;
+    }
+
+    const appName = (id: string) => apps.find((a) => a.id === id)?.name ?? id;
+
+    $('#logout-btn').addEventListener('click', async () => {
+      await signOut(auth).catch(() => {});
+      window.location.href = '/company-login';
+    });
+
+    // --- Apps -------------------------------------------------------------
+
+    // Uploads a build for an app and points the app at it, replacing (and
+    // deleting) any previous build. Used by "Add an app" and each app's row.
+    async function uploadBuild(appId: string, file: File, version: string, previousPath: string | undefined, onProgress: (pct: number) => void) {
+      const safeName = file.name.replace(/[^\w.-]+/g, '_');
+      const path = `builds/${appId}/${safeName}`;
+      const task = uploadBytesResumable(ref(storage, path), file, {
+        contentType: file.type || 'application/octet-stream',
+        // Download as a file with its real name, not open in the browser.
+        contentDisposition: `attachment; filename="${safeName}"`,
+      });
+      task.on('state_changed', (snap) => onProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)));
+      await task;
+      await updateDoc(doc(db, 'apps', appId), {
+        file_path: path,
+        file_name: safeName,
+        file_size: file.size,
+        version,
+        updated_at: serverTimestamp(),
+      });
+      if (previousPath && previousPath !== path) {
+        await deleteObject(ref(storage, previousPath)).catch(() => {});
+      }
+    }
+
+    async function loadApps() {
+      const snap = await getDocs(query(collection(db, 'apps'), orderBy('name')));
+      apps = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<App, 'id'>) }));
+      renderApps();
+      renderAppChecks();
+    }
+
+    function renderApps() {
+      const list = $('#apps-list');
+      list.replaceChildren();
+      if (!apps.length) list.append(el('p', 'empty', 'No apps yet — add one below.'));
+
+      for (const app of apps) {
+        const row = el('div', 'row');
+        const title = el('div', 'row-title');
+        title.append(el('strong', undefined, app.name));
+        if (app.version) title.append(el('span', 'pill', app.version));
+        row.append(title);
+
+        const build = app.file_path
+          ? `Build: ${app.file_name} · ${formatSize(app.file_size)}${app.updated_at ? ` · ${app.updated_at.toDate().toLocaleDateString()}` : ''}`
+          : 'No build uploaded yet.';
+        row.append(el('p', 'row-meta', build));
+
+        // Upload / replace the build, optionally bumping the version.
+        const upload = el('div', 'upload');
+        const version = el('input');
+        version.type = 'text';
+        version.placeholder = 'Version';
+        version.value = app.version ?? '';
+        version.className = 'upload-version';
+        const file = el('input');
+        file.type = 'file';
+        const go = el('button', 'btn-small', app.file_path ? 'Replace build' : 'Upload build');
+        go.type = 'button';
+        const bar = el('div', 'progress');
+        const fill = el('span');
+        bar.append(fill);
+        bar.hidden = true;
+        const status = el('p', 'row-meta');
+
+        go.addEventListener('click', async () => {
+          const f = file.files?.[0];
+          if (!f) {
+            status.textContent = 'Choose a file first.';
+            return;
+          }
+          go.disabled = true;
+          bar.hidden = false;
+          status.textContent = '';
+          try {
+            await uploadBuild(app.id, f, version.value.trim(), app.file_path, (pct) => {
+              fill.style.width = `${pct}%`;
+            });
+            await loadApps();
+          } catch {
+            status.textContent = 'Upload failed. Try again.';
+            go.disabled = false;
+            bar.hidden = true;
+          }
+        });
+
+        upload.append(version, file, go);
+        row.append(upload, bar, status);
+        list.append(row);
+      }
+    }
+
+    $<HTMLFormElement>('#new-app-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = $<HTMLParagraphElement>('#app-create-error');
+      show(err, null);
+      const form = e.target as HTMLFormElement;
+      const name = $<HTMLInputElement>('#app-name').value.trim();
+      const version = $<HTMLInputElement>('#app-version').value.trim();
+      const file = $<HTMLInputElement>('#app-file').files?.[0];
+      if (!name) return show(err, 'Give the app a name.');
+
+      const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+      const bar = $('#app-progress');
+      submit.disabled = true;
+      let appId = '';
+      try {
+        const created = await addDoc(collection(db, 'apps'), {
+          name,
+          version,
+          description: $<HTMLTextAreaElement>('#app-description').value.trim(),
+          updated_at: serverTimestamp(),
+        });
+        appId = created.id;
+        if (file) {
+          bar.hidden = false;
+          await uploadBuild(appId, file, version, undefined, (pct) => {
+            $('#app-progress-fill').style.width = `${pct}%`;
+          });
+        }
+        form.reset();
+        await loadApps();
+        renderTesters();
+      } catch {
+        // If the app was created but the upload failed, it's in the list and
+        // the build can be uploaded from its row.
+        if (appId) await loadApps().catch(() => {});
+        show(err, appId ? 'The app was added, but the build upload failed — upload it again from the app above.' : "Couldn't add the app. Try again.");
+      } finally {
+        submit.disabled = false;
+        bar.hidden = true;
+        $('#app-progress-fill').style.width = '0';
+      }
+    });
+
+    // --- Testers ----------------------------------------------------------
+
+    function appCheckbox(appId: string, checked: boolean, onChange?: (checked: boolean) => void) {
+      const label = el('label', 'check');
+      const box = el('input');
+      box.type = 'checkbox';
+      box.value = appId;
+      box.checked = checked;
+      if (onChange) box.addEventListener('change', () => onChange(box.checked));
+      label.append(box, document.createTextNode(appName(appId)));
+      return label;
+    }
+
+    function renderAppChecks() {
+      const wrap = $('#tester-apps');
+      wrap.replaceChildren(...apps.map((a) => appCheckbox(a.id, false)));
+      if (!apps.length) wrap.append(el('span', 'empty', 'Add an app first.'));
+      renderEmailOptions();
+    }
+
+    async function loadAgreementVersion() {
+      const snap = await getDoc(doc(db, 'config', 'tester_agreement'));
+      agreementVersion = snap.exists() ? snap.get('version') : '';
+    }
+
+    function agreementStatus(t: Tester) {
+      if (!t.agreement_version) return 'Not yet';
+      if (t.agreement_version !== agreementVersion) return 'Older version';
+      return t.agreement_accepted_at?.toDate().toLocaleDateString() ?? 'Accepted';
+    }
+
+    async function loadTesters() {
+      const snap = await getDocs(query(collection(db, 'testers'), orderBy('created_at', 'desc')));
+      testers = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Tester, 'id'>) }));
+      renderTesters();
+      renderEmailOptions();
+    }
+
+    // Removed testers stay in Firestore with active: false (docs/PRODUCT.md item 13).
+    const isActive = (t: Tester) => t.active !== false;
+    const activeTesters = () => testers.filter(isActive);
+    const fmtDate = (ts?: Timestamp | null) => ts?.toDate().toLocaleDateString() ?? '';
+
+    const assignmentsOf = (testerId: string) => collection(db, 'testers', testerId, 'assignments');
+    const eventsOf = (testerId: string) => collection(db, 'testers', testerId, 'events');
+
+    // Each stint on an app is its own history entry: start on assign, end on unassign.
+    async function assignApp(t: Tester, appId: string) {
+      const batch = writeBatch(db);
+      batch.update(doc(db, 'testers', t.id), { app_ids: arrayUnion(appId) });
+      batch.set(doc(assignmentsOf(t.id)), { app_id: appId, start_at: serverTimestamp(), end_at: null });
+      await batch.commit();
+    }
+
+    async function unassignApp(t: Tester, appId: string) {
+      const open = await getDocs(query(assignmentsOf(t.id), where('app_id', '==', appId), where('end_at', '==', null)));
+      const batch = writeBatch(db);
+      batch.update(doc(db, 'testers', t.id), { app_ids: arrayRemove(appId) });
+      open.forEach((d) => batch.update(d.ref, { end_at: serverTimestamp() }));
+      await batch.commit();
+    }
+
+    async function removeTester(t: Tester) {
+      const open = await getDocs(query(assignmentsOf(t.id), where('end_at', '==', null)));
+      const batch = writeBatch(db);
+      batch.update(doc(db, 'testers', t.id), { active: false, deactivated_at: serverTimestamp(), app_ids: [] });
+      open.forEach((d) => batch.update(d.ref, { end_at: serverTimestamp() }));
+      batch.set(doc(eventsOf(t.id)), { type: 'deactivated', at: serverTimestamp() });
+      await batch.commit();
+    }
+
+    // Back with the same Tester ID and no projects; re-assigning starts new stints.
+    async function reactivateTester(t: Tester) {
+      const batch = writeBatch(db);
+      batch.update(doc(db, 'testers', t.id), { active: true, reactivated_at: serverTimestamp() });
+      batch.set(doc(eventsOf(t.id)), { type: 'reactivated', at: serverTimestamp() });
+      await batch.commit();
+    }
+
+    async function renderHistory(t: Tester, cell: HTMLElement) {
+      cell.replaceChildren(el('p', 'row-meta', 'Loading history…'));
+      const [stints, events] = await Promise.all([
+        getDocs(query(assignmentsOf(t.id), orderBy('start_at'))),
+        getDocs(query(eventsOf(t.id), orderBy('at'))),
+      ]);
+
+      // One timeline, oldest first: added, project stints (by start), and
+      // deactivations/reactivations.
+      const entries: { at: number; text: string }[] = [
+        { at: t.created_at?.toMillis() ?? 0, text: `Added ${fmtDate(t.created_at)}` },
+      ];
+      for (const d of stints.docs) {
+        const a = d.data();
+        const end = a.end_at ? fmtDate(a.end_at) : 'present';
+        entries.push({ at: a.start_at?.toMillis() ?? 0, text: `${appName(a.app_id)}: ${fmtDate(a.start_at)} – ${end}` });
+      }
+      for (const d of events.docs) {
+        const e = d.data();
+        const label = e.type === 'reactivated' ? 'Reactivated' : 'Deactivated';
+        entries.push({ at: e.at?.toMillis() ?? 0, text: `${label} ${fmtDate(e.at)}` });
+      }
+      entries.sort((x, y) => x.at - y.at);
+
+      const list = el('ul', 'history-list');
+      list.append(...entries.map((x) => el('li', undefined, x.text)));
+      if (stints.empty) list.append(el('li', 'row-meta', 'No projects yet.'));
+      cell.replaceChildren(list);
+    }
+
+    function renderTesters() {
+      show($<HTMLParagraphElement>('#testers-notice'), null);
+      const tbody = $('#testers-tbody');
+      tbody.replaceChildren();
+      const showRemoved = $<HTMLInputElement>('#show-removed').checked;
+      const shown = showRemoved ? testers : activeTesters();
+      $('#testers-empty').hidden = shown.length > 0;
+      $('#testers-table').hidden = shown.length === 0;
+
+      for (const t of shown) {
+        const active = isActive(t);
+        const tr = el('tr', active ? undefined : 'removed');
+        tr.append(el('td', 'mono', t.id));
+        const who = el('td');
+        who.append(el('div', undefined, t.name), el('div', 'row-meta', t.email));
+        tr.append(who, el('td', 'row-meta', fmtDate(t.created_at)));
+        tr.append(el('td', 'row-meta', active ? agreementStatus(t) : `Removed ${fmtDate(t.deactivated_at)}`));
+
+        // Assign/unassign apps in place (removed testers: read-only).
+        const cell = el('td');
+        if (active) {
+          const checks = el('div', 'check-list');
+          for (const a of apps) {
+            const label = appCheckbox(a.id, (t.app_ids ?? []).includes(a.id), async (checked) => {
+              const box = label.querySelector('input')!;
+              box.disabled = true;
+              try {
+                if (checked) await assignApp(t, a.id);
+                else await unassignApp(t, a.id);
+                t.app_ids = checked ? [...(t.app_ids ?? []), a.id] : (t.app_ids ?? []).filter((x) => x !== a.id);
+                updateEmailForm();
+              } catch {
+                box.checked = !checked;
+                show($('#testers-error'), `Couldn't update ${t.name}'s apps. Refresh and try again.`);
+              } finally {
+                box.disabled = false;
+              }
+            });
+            checks.append(label);
+          }
+          cell.append(checks);
+        } else {
+          cell.append(el('span', 'row-meta', '—'));
+        }
+        tr.append(cell);
+
+        // History toggle, and a two-step Remove (no browser confirm dialog).
+        const actions = el('td', 'row-actions');
+        const historyRow = el('tr', 'history-row');
+        const historyCell = el('td');
+        historyCell.colSpan = 6;
+        historyRow.append(historyCell);
+        historyRow.hidden = true;
+
+        const historyBtn = el('button', 'link-btn', 'History');
+        historyBtn.type = 'button';
+        historyBtn.addEventListener('click', () => {
+          historyRow.hidden = !historyRow.hidden;
+          historyBtn.textContent = historyRow.hidden ? 'History' : 'Hide history';
+          if (!historyRow.hidden) {
+            renderHistory(t, historyCell).catch(() => historyCell.replaceChildren(el('p', 'row-meta', "Couldn't load history.")));
+          }
+        });
+        actions.append(historyBtn);
+
+        if (!active) {
+          const reactivateBtn = el('button', 'link-btn reactivate-btn', 'Reactivate');
+          reactivateBtn.type = 'button';
+          reactivateBtn.addEventListener('click', async () => {
+            reactivateBtn.disabled = true;
+            try {
+              await reactivateTester(t);
+              await loadTesters();
+              show($<HTMLParagraphElement>('#testers-error'), null);
+              show($<HTMLParagraphElement>('#testers-notice'), `${t.name} is active again. Tick the apps they should have — they start with none.`);
+            } catch {
+              reactivateBtn.disabled = false;
+              show($('#testers-error'), `Couldn't reactivate ${t.name}. Refresh and try again.`);
+            }
+          });
+          actions.append(reactivateBtn);
+        }
+
+        if (active) {
+          const removeBtn = el('button', 'link-btn remove-btn', 'Remove');
+          removeBtn.type = 'button';
+          let armed = false;
+          let timer = 0;
+          removeBtn.addEventListener('click', async () => {
+            if (!armed) {
+              armed = true;
+              removeBtn.textContent = 'Confirm remove';
+              removeBtn.classList.add('armed');
+              timer = window.setTimeout(() => {
+                armed = false;
+                removeBtn.textContent = 'Remove';
+                removeBtn.classList.remove('armed');
+              }, 4000);
+              return;
+            }
+            window.clearTimeout(timer);
+            removeBtn.disabled = true;
+            try {
+              await removeTester(t);
+              await loadTesters();
+            } catch {
+              removeBtn.disabled = false;
+              show($('#testers-error'), `Couldn't remove ${t.name}. Refresh and try again.`);
+            }
+          });
+          actions.append(removeBtn);
+        }
+        tr.append(actions);
+        tbody.append(tr, historyRow);
+      }
+    }
+
+    $('#show-removed').addEventListener('change', renderTesters);
+
+    class IdTaken extends Error {}
+
+    $<HTMLFormElement>('#new-tester-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target as HTMLFormElement;
+      const err = $<HTMLParagraphElement>('#tester-create-error');
+      const ok = $<HTMLParagraphElement>('#tester-create-success');
+      show(err, null);
+      show(ok, null);
+
+      const name = $<HTMLInputElement>('#tester-name').value.trim();
+      const email = $<HTMLInputElement>('#tester-email').value.trim();
+      const appIds = Array.from(form.querySelectorAll<HTMLInputElement>('#tester-apps input:checked')).map((b) => b.value);
+      if (!name || !email) return show(err, 'Name and email are both required.');
+
+      const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+      submit.disabled = true;
+
+      // Same collision-safe pattern as Client IDs (docs/PRODUCT.md item 10).
+      let createdId: string | null = null;
+      let failed = false;
+      for (let attempt = 0; attempt < 5 && !createdId && !failed; attempt++) {
+        const testerId = generateId();
+        const testerRef = doc(db, 'testers', testerId);
+        try {
+          await runTransaction(db, async (tx) => {
+            if ((await tx.get(testerRef)).exists()) throw new IdTaken();
+            tx.set(testerRef, { name, email, app_ids: appIds, active: true, created_at: serverTimestamp() });
+            for (const appId of appIds) {
+              tx.set(doc(assignmentsOf(testerId)), { app_id: appId, start_at: serverTimestamp(), end_at: null });
+            }
+          });
+          createdId = testerId;
+        } catch (error) {
+          if (!(error instanceof IdTaken)) failed = true;
+        }
+      }
+      submit.disabled = false;
+
+      if (createdId) {
+        form.reset();
+        show(ok, `Tester added — Tester ID: ${createdId}. Send them this ID and the link starterculturestudio.com/tester-login.`);
+        await loadTesters();
+      } else {
+        show(err, "Couldn't add the tester. Try again.");
+      }
+    });
+
+    // --- Email testers ----------------------------------------------------
+    // docs/PRODUCT.md item 13: all testers / one app's testers go in BCC, a
+    // single tester in To. mailto: can't choose the sending account.
+
+    const audience = $<HTMLSelectElement>('#email-audience');
+    const emailApp = $<HTMLSelectElement>('#email-app');
+    const emailTester = $<HTMLSelectElement>('#email-tester');
+
+    function option(value: string, label: string) {
+      const opt = el('option', undefined, label);
+      opt.value = value;
+      return opt;
+    }
+
+    function renderEmailOptions() {
+      const keepApp = emailApp.value;
+      const keepTester = emailTester.value;
+      emailApp.replaceChildren(...apps.map((a) => option(a.id, a.name)));
+      emailTester.replaceChildren(...activeTesters().map((t) => option(t.id, `${t.name} (${t.email})`)));
+      if (keepApp) emailApp.value = keepApp;
+      if (keepTester) emailTester.value = keepTester;
+      updateEmailForm();
+    }
+
+    function recipients(): { to: string[]; bcc: string[] } {
+      if (audience.value === 'tester') {
+        const t = activeTesters().find((x) => x.id === emailTester.value);
+        return { to: t ? [t.email] : [], bcc: [] };
+      }
+      const group = audience.value === 'app' ? activeTesters().filter((t) => (t.app_ids ?? []).includes(emailApp.value)) : activeTesters();
+      // De-duplicate in case two testers share an address.
+      return { to: [], bcc: [...new Set(group.map((t) => t.email).filter(Boolean))] };
+    }
+
+    function updateEmailForm() {
+      $('#email-app-field').hidden = audience.value !== 'app';
+      $('#email-tester-field').hidden = audience.value !== 'tester';
+      const { to, bcc } = recipients();
+      const n = to.length + bcc.length;
+      const where = to.length ? 'To' : 'BCC';
+      $('#email-summary').textContent = n ? `${n} recipient${n === 1 ? '' : 's'} in ${where}.` : 'No testers match.';
+      const subject = $<HTMLInputElement>('#email-subject');
+      if (!subject.dataset.touched) {
+        const app = apps.find((a) => a.id === emailApp.value);
+        subject.value = audience.value === 'app' && app ? `StarterCulture testing: ${app.name}` : 'StarterCulture testing';
+      }
+    }
+
+    audience.addEventListener('change', updateEmailForm);
+    emailApp.addEventListener('change', updateEmailForm);
+    emailTester.addEventListener('change', updateEmailForm);
+    $('#email-subject').addEventListener('input', (e) => {
+      (e.target as HTMLInputElement).dataset.touched = '1';
+    });
+
+    $<HTMLFormElement>('#email-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const { to, bcc } = recipients();
+      if (!to.length && !bcc.length) return;
+      const enc = (list: string[]) => list.map(encodeURIComponent).join(',');
+      const params = [];
+      if (bcc.length) params.push(`bcc=${enc(bcc)}`);
+      const subject = $<HTMLInputElement>('#email-subject').value.trim();
+      if (subject) params.push(`subject=${encodeURIComponent(subject)}`);
+      window.location.href = `mailto:${enc(to)}${params.length ? `?${params.join('&')}` : ''}`;
+    });
+
+    $('#email-copy').addEventListener('click', async () => {
+      const { to, bcc } = recipients();
+      const btn = $<HTMLButtonElement>('#email-copy');
+      try {
+        await navigator.clipboard.writeText([...to, ...bcc].join(', '));
+        btn.textContent = 'Copied';
+      } catch {
+        btn.textContent = "Couldn't copy";
+      }
+      setTimeout(() => (btn.textContent = 'Copy addresses'), 1600);
+    });
+
+    // --- Feedback ---------------------------------------------------------
+
+    async function loadFeedback() {
+      const list = $('#feedback-list');
+      const snap = await getDocs(query(collection(db, 'tester_feedback'), orderBy('created_at', 'desc'), limit(50)));
+      list.replaceChildren();
+      $('#feedback-empty').hidden = !snap.empty;
+
+      for (const entry of snap.docs) {
+        const f = entry.data();
+        const tester = testers.find((t) => t.id === f.tester_id);
+        const row = el('article', 'row');
+        const title = el('div', 'row-title');
+        title.append(el('strong', undefined, tester?.name ?? f.tester_id), el('span', 'pill', appName(f.app_id)));
+        row.append(title);
+        const when = (f.created_at as Timestamp | null)?.toDate().toLocaleString() ?? '';
+        row.append(el('p', 'row-meta', `${f.tester_id} · ${when}`), el('p', 'row-note', f.note));
+
+        const shots: string[] = Array.isArray(f.screenshots) ? f.screenshots : [];
+        if (shots.length) {
+          const thumbs = el('div', 'thumbs');
+          row.append(thumbs);
+          for (const path of shots) {
+            getDownloadURL(ref(storage, path))
+              .then((url) => {
+                const a = el('a');
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener';
+                const img = el('img');
+                img.src = url;
+                img.alt = 'Screenshot';
+                img.loading = 'lazy';
+                a.append(img);
+                thumbs.append(a);
+              })
+              .catch(() => {});
+          }
+        }
+        list.append(row);
+      }
+    }
+
+    // --- Load (staff only) --------------------------------------------------
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      unsubscribe();
+      if (!user) {
+        window.location.href = '/company-login';
+        return;
+      }
+      const { claims } = await user.getIdTokenResult();
+      if (claims.staff !== true) {
+        window.location.href = '/company-login';
+        return;
+      }
+      $('#admin-whoami').textContent = `Logged in as ${user.email}`;
+
+      await loadApps().catch(() => show($('#apps-error'), "Couldn't load apps. Refresh to try again."));
+      await loadAgreementVersion().catch(() => {});
+      await loadTesters().catch(() => show($('#testers-error'), "Couldn't load testers. Refresh to try again."));
+      await loadFeedback().catch(() => show($('#feedback-error'), "Couldn't load feedback. Refresh to try again."));
+    });
+  </script>
+</Layout>
+
+<style>
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+
+  :global(.row) {
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+
+  :global(.row-title) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+  }
+
+  :global(.row-meta) {
+    color: var(--brown-soft);
+    font-size: 13px;
+    margin: 6px 0 0;
+  }
+
+  :global(.row-note) {
+    white-space: pre-wrap;
+    font-size: 15px;
+    margin: 10px 0 0;
+  }
+
+  :global(.upload) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  :global(.panel-card .upload .upload-version) {
+    width: 130px;
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+
+  /* The testers table has six columns; give this page more room than the
+     other panel pages. */
+  :global(.panel-main) { max-width: 960px; }
+
+  .panel-card .show-removed {
+    margin: -8px 0 14px;
+    font-size: 14px;
+    color: var(--brown-soft);
+  }
+
+  /* Wider than the default .table-scroll min-width: six columns. */
+  :global(.table-scroll .testers-table) { min-width: 640px; }
+
+  :global(.testers-table tr.removed td) { color: var(--brown-soft); }
+
+  :global(.row-actions) {
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  :global(.row-actions .link-btn + .link-btn) { margin-left: 14px; }
+
+  :global(.panel-main .reactivate-btn) {
+    color: var(--terracotta);
+    font-weight: 600;
+  }
+
+  :global(.panel-main .remove-btn.armed) {
+    color: var(--terracotta);
+    font-weight: 600;
+  }
+
+  :global(.panel-card tr.history-row td) {
+    background: var(--cream);
+    padding: 12px 16px;
+  }
+
+  :global(.history-list) {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .email-actions {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+  }
+
+  .add-block {
+    margin-top: 20px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+
+  .add-block summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--terracotta);
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+
+  .add-block[open] summary { margin-bottom: 16px; }
+</style>
